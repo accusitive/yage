@@ -1,6 +1,7 @@
 #include <iostream>
 #include <squall/squall_vmstd.hpp>
-
+#include <flecs.h>
+#include "./sokol/sokol_gfx.h"
 struct Position {
     float x, y;
 };
@@ -18,12 +19,12 @@ int main(int argc, char *argv[]) {
                 p.x += v.x;
                 p.y += v.y;
             });
-
     auto e = ecs.entity()
             .set([](Position& p, Velocity& v) {
                 p = {10, 20};
                 v = {1, 2};
             });
 
-    while (ecs.progress()) { }
+//    while (ecs.progress()) { }
+    ecs.progress();
 }

@@ -12,13 +12,14 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(squall)
-
+add_subdirectory(flecs)
 
 message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
 
 add_executable(yage main.cpp)
-target_link_libraries ( yage squirrel_static sqstdlib_static)
-target_include_directories ( yage PUBLIC
+target_link_libraries (yage squirrel_static sqstdlib_static)
+target_link_libraries(yage flecs::flecs_static)
+target_include_directories (yage PUBLIC
         ${squirrel_SOURCE_DIR}/include
         ${squall_SOURCE_DIR}
 )

@@ -1,0 +1,6 @@
+[submodule "flecs"]
+	path = flecs
+	url = https://github.com/SanderMertens/flecs
+[submodule "sokol"]
+	path = sokol
+	url = https://github.com/floooh/sokol
