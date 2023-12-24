@@ -4,3 +4,6 @@
 [submodule "sokol"]
 	path = sokol
 	url = https://github.com/floooh/sokol
+[submodule "glfw"]
+	path = glfw
+	url = https://github.com/glfw/glfw
