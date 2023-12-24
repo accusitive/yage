@@ -22,13 +22,13 @@ find_package(OpenGL REQUIRED)
 
 message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
 
-set(SOKOL_HEADERS
-        sokol/sokol_gfx.h
-        sokol/sokol_app.h
-        sokol/sokol_audio.h
-        sokol/sokol_time.h
-        sokol/sokol_glue.h)
-add_library(sokol STATIC sokol.c ${SOKOL_HEADERS})
+# set(SOKOL_HEADERS
+#         sokol/sokol_gfx.h
+#         sokol/sokol_app.h
+#         sokol/sokol_audio.h
+#         sokol/sokol_time.h
+#         sokol/sokol_glue.h)
+# add_library(sokol STATIC sokol.c ${SOKOL_HEADERS})
 
 add_executable(yage main.cpp
         Engine.cc

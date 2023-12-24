@@ -8,9 +8,10 @@
 #include <squall/squall_vmstd.hpp>
 #include <flecs.h>
 
-
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include "sokol/sokol_gfx.h"
+#include "sokol/sokol_log.h"
 
 namespace yaga {
 

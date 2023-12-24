@@ -6,7 +6,7 @@
 #include <iostream>
 #include "Engine.hh"
 //#include "sokol/sokol_gfx.h"
-#include "sokol/sokol_log.h"
+//#include "sokol/sokol_log.h"
 
 namespace yaga {
 std::string Engine::GetWindowTitle() {
@@ -27,7 +27,8 @@ Engine::Engine() {
 }
 
 void Engine::InitalizeGraphics() {
-  sg_desc sg_setup_desc;
+  sg_desc sg_setup_desc = {};
+  printf(" setup start canary %i\n", sg_setup_desc._start_canary);
   sg_setup_desc.logger.func = slog_func;
   sg_setup(sg_setup_desc);
   const float vertices[] = {
@@ -36,11 +37,11 @@ void Engine::InitalizeGraphics() {
       0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
       -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f
   };
-  sg_buffer_desc buffer_desc;
+  sg_buffer_desc buffer_desc = {};
   buffer_desc.data = SG_RANGE(vertices);
   sg_buffer vbuf = sg_make_buffer(buffer_desc);
 
-  sg_shader_desc shader_desc;
+  sg_shader_desc shader_desc = {};
   shader_desc.vs.source = "#version 330\n"
                           "layout(location=0) in vec4 position;\n"
                           "layout(location=1) in vec4 color0;\n"
@@ -58,12 +59,12 @@ void Engine::InitalizeGraphics() {
           "}\n";
   sg_shader shd = sg_make_shader(shader_desc);
 
-  sg_pipeline_desc pipeline_desc;
+  sg_pipeline_desc pipeline_desc = {};
   pipeline_desc.shader = shd;
 
 //  sg_vertex_attr_state vas;
 
-  sg_vertex_layout_state vls;
+  sg_vertex_layout_state vls = {};
 
   vls.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;
   vls.attrs[1].format = SG_VERTEXFORMAT_FLOAT4;

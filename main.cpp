@@ -1,7 +1,7 @@
 #include <iostream>
 
-//#define SOKOL_IMPL
-//#define SOKOL_GLCORE33
+#define SOKOL_IMPL
+#define SOKOL_GLCORE33
 //#include "sokol/sokol_gfx.h"
 
 #include "Engine.hh"
