@@ -10,8 +10,9 @@
 #else
 #define SOKOL_GLCORE33
 #endif
-#include "sokol_app.h"
-#include "sokol_gfx.h"
-#include "sokol_audio.h"
-#include "sokol_time.h"
-#include "sokol_glue.h"
+
+#include "sokol/sokol_gfx.h"
+#include "sokol/sokol_audio.h"
+#include "sokol/sokol_time.h"
+#include "sokol/sokol_glue.h"
+#include "sokol/sokol_log.h"

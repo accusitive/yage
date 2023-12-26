@@ -7,41 +7,71 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+set(SOKOL_HEADERS
+        sokol/sokol_gfx.h
+        sokol/sokol_app.h
+        sokol_imgui.h
+        sokol/sokol_glue.h)
+
 include(FetchContent)
 
+cmake_policy(SET CMP0135 NEW)
+cmake_policy(SET CMP0072 NEW)
 
 FetchContent_Declare(
         squall
-        URL      https://github.com/jonigata/squall/archive/master.zip
+        URL https://github.com/jonigata/squall/archive/master.zip
 )
-
+FetchContent_Declare(
+        chipmunk
+        URL https://github.com/slembcke/Chipmunk2D/archive/master.zip
+)
+FetchContent_Declare(
+        flecs
+        URL https://github.com/SanderMertens/flecs/archive/master.zip
+)
 FetchContent_MakeAvailable(squall)
-add_subdirectory(flecs)
+FetchContent_MakeAvailable(chipmunk)
+FetchContent_MakeAvailable(flecs)
+
+
+# IMGUI
+add_library(imgui STATIC
+        imgui/imgui.h
+        imgui/imgui_internal.h
+        imgui/imgui.cpp
+        imgui/imgui_demo.cpp
+        imgui/imgui_draw.cpp
+        imgui/imgui_tables.cpp
+        imgui/imgui_widgets.cpp)
+
+target_include_directories(imgui PUBLIC
+        imgui/
+        imgui/backends)
+#add_subdirectory(flecs)
 add_subdirectory(glfw)
+find_package(glfw REQUIRED)
 find_package(OpenGL REQUIRED)
 
 message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
-
-# set(SOKOL_HEADERS
-#         sokol/sokol_gfx.h
-#         sokol/sokol_app.h
-#         sokol/sokol_audio.h
-#         sokol/sokol_time.h
-#         sokol/sokol_glue.h)
-# add_library(sokol STATIC sokol.c ${SOKOL_HEADERS})
+message([TRACE] " chipmunk_SOURCE_DIR = ${chipmunk_SOURCE_DIR}/  ")
 
 add_executable(yage main.cpp
-        Engine.cc
-        Engine.hh
-        )
+        engine.cc
+        engine.hh
+)
 target_link_libraries(yage squirrel_static sqstdlib_static)
 target_link_libraries(yage flecs::flecs_static)
+target_link_libraries(yage chipmunk)
 target_link_libraries(yage glfw)
 target_link_libraries(yage OpenGL::GL)
+target_link_libraries(yage imgui)
 
-target_include_directories (yage PUBLIC
+target_include_directories(yage PUBLIC
         ${squirrel_SOURCE_DIR}/include
         ${squall_SOURCE_DIR}
+        ${chipmunk_SOURCE_DIR}/include
+        ${imgui_SOURCE_DIR}
 )
 
 #add_executable ( squirrel-test squirrel_test.cpp)

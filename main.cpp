@@ -1,21 +1,25 @@
 #include <iostream>
 
+
+//#include "sokol/sokol_gfx.h"
 #define SOKOL_IMPL
 #define SOKOL_GLCORE33
-//#include "sokol/sokol_gfx.h"
+#define SOKOL_IMGUI_NO_SOKOL_APP
 
-#include "Engine.hh"
+#include "engine.hh"
+
 
 struct Position {
-  float x, y;
+    float x, y;
 };
 
 struct Velocity {
-  float x, y;
+    float x, y;
 };
 struct Identifier {
-  int32_t name;
+    int32_t name;
 };
+
 int main(int argc, char *argv[]) {
 
 
@@ -56,9 +60,9 @@ int main(int argc, char *argv[]) {
 //            )");
 //    ecs.progress();
 
-  auto *e = new yaga::Engine();
-
-  e->InitalizeGraphics();
-  e->DrawLoop();
+//  auto *e = new yaga::Engine();
+    auto e = &yage::Engine::GetEngine();
+    e->InitializeGraphics();
+    e->DrawLoop();
 
 }
