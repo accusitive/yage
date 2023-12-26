@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(yage)
+project(yage-project)
 
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_EXAMPLES off)
@@ -48,30 +48,30 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC
         imgui/
         imgui/backends)
-#add_subdirectory(flecs)
 add_subdirectory(glfw)
-find_package(glfw REQUIRED)
+find_package(glfw)
 find_package(OpenGL REQUIRED)
 
 message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
 message([TRACE] " chipmunk_SOURCE_DIR = ${chipmunk_SOURCE_DIR}/  ")
 
-add_executable(yage main.cpp
-        engine.cc
-        engine.hh
-)
-target_link_libraries(yage squirrel_static sqstdlib_static)
-target_link_libraries(yage flecs::flecs_static)
-target_link_libraries(yage chipmunk)
-target_link_libraries(yage glfw)
-target_link_libraries(yage OpenGL::GL)
-target_link_libraries(yage imgui)
+add_library(yage-engine
+        engine/engine.cc
+        engine/engine.hh)
 
-target_include_directories(yage PUBLIC
+target_link_libraries(yage-engine squirrel_static sqstdlib_static)
+target_link_libraries(yage-engine flecs::flecs_static)
+target_link_libraries(yage-engine chipmunk)
+target_link_libraries(yage-engine glfw)
+target_link_libraries(yage-engine OpenGL::GL)
+target_link_libraries(yage-engine imgui)
+
+target_include_directories(yage-engine PUBLIC
         ${squirrel_SOURCE_DIR}/include
         ${squall_SOURCE_DIR}
         ${chipmunk_SOURCE_DIR}/include
         ${imgui_SOURCE_DIR}
 )
-
-#add_executable ( squirrel-test squirrel_test.cpp)
+add_executable(yage-pc pc/main.cc)
+target_link_libraries(yage-pc yage-engine)
+target_include_directories(yage-pc PUBLIC engine)

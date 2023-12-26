@@ -30,6 +30,7 @@ namespace yage {
         glfwSwapInterval(1);
         glfwSetKeyCallback(window, Engine::KeyCallback);
         glfwSetCursorPosCallback(window, Engine::CursorPosCallback);
+        glfwSetMouseButtonCallback(window, Engine::MouseButtonCallback);
         this->mainWindow = window;
         std::cout << "Engine init" << std::endl;
     }
@@ -164,6 +165,10 @@ namespace yage {
 
     void Engine::CursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
 //        Engine::GetEngine().TestCallbacks(key);
+        simgui_add_mouse_pos_event((float) xpos, (float) ypos);
+    }
+    void Engine::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+        simgui_add_mouse_button_event(button, action);
     }
 
 } // yaga

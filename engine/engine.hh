@@ -5,25 +5,24 @@
 #ifndef YAGE_ENGINE_HH
 #define YAGE_ENGINE_HH
 
-#include <squall/squall_vmstd.hpp>
-#include <flecs.h>
+#include "squall/squall_vmstd.hpp"
+#include "flecs.h"
 
 #define GLFW_INCLUDE_NONE
 
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 
 
-#include "sokol/sokol_gfx.h"
-#include "sokol/sokol_log.h"
+#include "../sokol/sokol_gfx.h"
+#include "../sokol/sokol_log.h"
 
 #define SOKOL_IMGUI_NO_SOKOL_APP
 
-#include "imgui/imgui.h"
-#include "sokol_imgui.h"
-#include <chipmunk/chipmunk.h>
+#include "imgui.h"
+#include "../sokol_imgui.h"
+#include "chipmunk/chipmunk.h"
 
 namespace yage {
-
     class Engine {
     private:
         squall::VMStd vm;
@@ -62,6 +61,8 @@ namespace yage {
         static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
         static void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
+
+        static void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 
         void TestCallbacks(int num);
 
