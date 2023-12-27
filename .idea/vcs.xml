@@ -7,6 +7,5 @@
     <mapping directory="$PROJECT_DIR$/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/imgui" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/sokol" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/switch" vcs="Git" />
   </component>
 </project>
