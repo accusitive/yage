@@ -8,16 +8,19 @@
 #include "engine.hh"
 //#include "sokol/sokol_gfx.h"
 //#include "sokol/sokol_log.h"
+//#ifndef YAGE_SWITCH
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
-        return "Yaga Game";
+        return "Yage Game Engine (this is written in code shared by PC and Switch!)";
     }
+#ifndef YAGE_SWITCH
 
     Engine::~Engine() {
         glfwDestroyWindow(this->mainWindow);
     }
-
+#endif
+#ifndef YAGE_SWITCH
     Engine::Engine() {
 
         glfwInit();
@@ -34,7 +37,11 @@ namespace yage {
         this->mainWindow = window;
         std::cout << "Engine init" << std::endl;
     }
-
+#else
+Engine::Engine() {
+        std::cout << "Engine init" << std::endl;
+    }
+#endif
 //    void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 ////        HandleKeyPress(key, scancode, mods);
 //    }
@@ -113,6 +120,7 @@ namespace yage {
     void Engine::TestCallbacks(int num) {
         std::cout << "Testing callback works." << num << std::endl;
     }
+#ifndef YAGE_SWITCH
 
     void Engine::DrawLoop() {
         while (!glfwWindowShouldClose(this->mainWindow)) {
@@ -123,6 +131,7 @@ namespace yage {
             glfwPollEvents();
         }
     }
+#endif
 
     void Engine::Render(int width, int height) {
         // ImGui Frame setup
@@ -157,7 +166,7 @@ namespace yage {
         sg_end_pass();
     }
 
-
+#ifndef YAGE_SWITCH
     void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
         Engine &engine = Engine::GetEngine();
         engine.TestCallbacks(key);
@@ -170,6 +179,6 @@ namespace yage {
     void Engine::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
         simgui_add_mouse_button_event(button, action);
     }
-
+#endif
 } // yaga
 

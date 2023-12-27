@@ -3,9 +3,10 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/squirrel-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/flecs" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/glfw" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-release/_deps/squirrel-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pc/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/sokol" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/switch-cmake" vcs="Git" />
   </component>
 </project>
