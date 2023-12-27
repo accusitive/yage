@@ -10,16 +10,17 @@
 
 #include "../sokol/sokol_gfx.h"
 //#include "../sokol/sokol_log.h"
-
 #define SOKOL_IMGUI_NO_SOKOL_APP
 
 #include "imgui.h"
 #include "../../sokol_imgui.h"
+#include "resource.hh"
 
 namespace yage {
     class Engine {
     private:
         entt::registry registry;
+        ShaderResourceManager shader_resource_manager;
 
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
@@ -61,7 +62,7 @@ namespace yage {
 
         void RenderScene(int width, int height);
 
-        static sg_shader CreateShader(const std::string &shader_name);
+        static sg_shader create_shader_program(const ShaderResource& vs, const ShaderResource& fs);
 
     };
 

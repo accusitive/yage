@@ -1,4 +1,5 @@
 ## Targets
+set(CMAKE_CXX_STANDARD 20)
 
 # First, we want to add the regular ELF target.
 add_executable(yage_app source/switch_main.cc)

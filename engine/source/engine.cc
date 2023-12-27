@@ -7,9 +7,8 @@
 #include "engine.hh"
 #include "../sokol/sokol_gfx.h"
 #include "util.hh"
+#include "resource.hh"
 
-#include "../gen/f_triangle.glsl"
-#include "../gen/v_triangle.glsl"
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
@@ -20,13 +19,14 @@ namespace yage {
 
     Engine::Engine() {
         std::cout << "Engine init" << std::endl;
+        this->shader_resource_manager.register_builtin_shader_resources();
     }
 
-    sg_shader Engine::CreateShader(const std::string &shader_name) {
+    sg_shader Engine::create_shader_program(const ShaderResource& vs, const ShaderResource& fs) {
         sg_shader_desc shader_desc = {};
 
-        shader_desc.vs.source = v_triangleShaderSource[0];
-        shader_desc.fs.source = f_triangleShaderSource[0];
+        shader_desc.vs.source = vs.source.c_str();
+        shader_desc.fs.source = fs.source.c_str();
 
         return sg_make_shader(shader_desc);
     }
@@ -50,7 +50,7 @@ namespace yage {
         buffer_desc.data = SG_RANGE(vertices);
         sg_buffer vertex_buffer = sg_make_buffer(buffer_desc);
 
-        sg_shader shd = Engine::CreateShader("triangle");
+        sg_shader shd = Engine::create_shader_program(this->shader_resource_manager.get_shader_resource(V_TRIANGLE).value(), this->shader_resource_manager.get_shader_resource(F_TRIANGLE).value());
         sg_pipeline_desc pipeline_desc = {};
         pipeline_desc.shader = shd;
 
