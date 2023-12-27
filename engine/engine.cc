@@ -14,34 +14,13 @@ namespace yage {
     std::string Engine::GetWindowTitle() {
         return "Yage Game Engine (this is written in code shared by PC and Switch!)";
     }
-#ifndef YAGE_SWITCH
 
     Engine::~Engine() {
-        glfwDestroyWindow(this->mainWindow);
     }
-#endif
-#ifndef YAGE_SWITCH
-    Engine::Engine() {
 
-        glfwInit();
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        GLFWwindow *window = glfwCreateWindow(640, 480, GetWindowTitle().c_str(), 0, 0);
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1);
-        glfwSetKeyCallback(window, Engine::KeyCallback);
-        glfwSetCursorPosCallback(window, Engine::CursorPosCallback);
-        glfwSetMouseButtonCallback(window, Engine::MouseButtonCallback);
-        this->mainWindow = window;
+    Engine::Engine() {
         std::cout << "Engine init" << std::endl;
     }
-#else
-Engine::Engine() {
-        std::cout << "Engine init" << std::endl;
-    }
-#endif
 //    void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 ////        HandleKeyPress(key, scancode, mods);
 //    }
@@ -76,7 +55,7 @@ Engine::Engine() {
 
     void Engine::InitializeGraphics() {
         sg_desc sg_setup_desc = {};
-        sg_setup_desc.logger.func = slog_func;
+//        sg_setup_desc.logger.func = slog_func;
         sg_setup(sg_setup_desc);
 
         ImGui::CreateContext();
@@ -120,17 +99,19 @@ Engine::Engine() {
     void Engine::TestCallbacks(int num) {
         std::cout << "Testing callback works." << num << std::endl;
     }
+
 #ifndef YAGE_SWITCH
 
     void Engine::DrawLoop() {
-        while (!glfwWindowShouldClose(this->mainWindow)) {
-            int width, height;
-            glfwGetFramebufferSize(this->mainWindow, &width, &height);
-            this->Render(width, height);
-            glfwSwapBuffers(this->mainWindow);
-            glfwPollEvents();
-        }
+//        while (!glfwWindowShouldClose(this->mainWindow)) {
+//            int width, height;
+//            glfwGetFramebufferSize(this->mainWindow, &width, &height);
+//            this->Render(width, height);
+//            glfwSwapBuffers(this->mainWindow);
+//            glfwPollEvents();
+//        }
     }
+
 #endif
 
     void Engine::Render(int width, int height) {
@@ -166,19 +147,19 @@ Engine::Engine() {
         sg_end_pass();
     }
 
-#ifndef YAGE_SWITCH
-    void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-        Engine &engine = Engine::GetEngine();
-        engine.TestCallbacks(key);
-    }
-
-    void Engine::CursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
-//        Engine::GetEngine().TestCallbacks(key);
-        simgui_add_mouse_pos_event((float) xpos, (float) ypos);
-    }
-    void Engine::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
-        simgui_add_mouse_button_event(button, action);
-    }
-#endif
+//#ifndef YAGE_SWITCH
+//    void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+//        Engine &engine = Engine::GetEngine();
+//        engine.TestCallbacks(key);
+//    }
+//
+//    void Engine::CursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
+////        Engine::GetEngine().TestCallbacks(key);
+//        simgui_add_mouse_pos_event((float) xpos, (float) ypos);
+//    }
+//    void Engine::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+//        simgui_add_mouse_button_event(button, action);
+//    }
+//#endif
 } // yaga
 

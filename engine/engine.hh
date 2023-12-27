@@ -10,16 +10,11 @@
 //#define FLECS_SYSTEM
 //#define FLECS_NO_HTTP
 //#include "flecs.h"
-#define YAGE_SWITCH 1
-
-#define GLFW_INCLUDE_NONE
-#ifndef YAGE_SWITCH
-#include "GLFW/glfw3.h"
-#endif
+//#define YAGE_SWITCH 1
 
 
 #include "../sokol/sokol_gfx.h"
-#include "../sokol/sokol_log.h"
+//#include "../sokol/sokol_log.h"
 
 #define SOKOL_IMGUI_NO_SOKOL_APP
 
@@ -31,9 +26,6 @@ namespace yage {
     private:
 //        squall::VMStd vm;
 //        flecs::world ecs;
-#ifndef YAGE_SWITCH
-        GLFWwindow *mainWindow = {};
-#endif
 
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
@@ -63,14 +55,14 @@ namespace yage {
         void DrawLoop();
 
         void Render(int width, int height);
-#ifndef YAGE_SWITCH
-
-        static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-
-        static void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
-
-        static void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-#endif
+//#ifndef YAGE_SWITCH
+//
+//        static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+//
+//        static void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
+//
+//        static void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+//#endif
         void TestCallbacks(int num);
 
         void RenderScene(int width, int height);
