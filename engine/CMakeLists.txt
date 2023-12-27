@@ -59,8 +59,12 @@ message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
 #message([TRACE] " chipmunk_SOURCE_DIR = ${chipmunk_SOURCE_DIR}/  ")
 
 add_library(yage-engine
+        util.cc
+        util.hh
         engine.cc
-        engine.hh)
+        engine.hh
+
+)
 
 #target_link_libraries(yage-engine squirrel_static sqstdlib_static)
 #target_link_libraries(yage-engine flecs::flecs_static)

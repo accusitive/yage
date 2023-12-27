@@ -6,7 +6,7 @@
 #include <iostream>
 #include "engine.hh"
 #include "sokol/sokol_gfx.h"
-
+#include "util.hh"
 
 #include "gen/f_triangle.glsl"
 #include "gen/v_triangle.glsl"
@@ -77,6 +77,7 @@ namespace yage {
     }
 
     void Engine::Render(int width, int height) {
+        this->framecount++;
         // ImGui Frame setup
         simgui_frame_desc_t frame_desc = {};
         frame_desc.width = width;
@@ -90,6 +91,8 @@ namespace yage {
 
         // Begin frame render
         ImGui::Begin("Yet Another Game Engine", nullptr, ImGuiWindowFlags_None);
+        ImGui::Text("Frame count: %i", this->framecount);
+        ImGui::Text("Platform: %s", getBuild());
         this->RenderScene(width, height);
 
         // End frame render
