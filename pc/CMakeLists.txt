@@ -3,7 +3,7 @@ project(yage-pc)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(yage-pc pc_main.cc)
+add_executable(yage-pc source/pc_main.cc)
 
 add_subdirectory(glfw)
 find_package(glfw)

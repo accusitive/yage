@@ -3,7 +3,7 @@ project(yage)
 
 add_subdirectory(engine)
 if(SWITCH)
-    add_subdirectory(switch-cmake)
+    add_subdirectory(platform_switch)
 else()
     add_subdirectory(pc)
 endif()
