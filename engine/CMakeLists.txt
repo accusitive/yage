@@ -67,6 +67,7 @@ add_library(yage-engine
 #target_link_libraries(yage-engine chipmunk)
 #target_link_libraries(yage-engine OpenGL::GL)
 target_link_libraries(yage-engine imgui)
+#target_link_libraries(yage-engine sokol)
 
 target_include_directories(yage-engine PUBLIC
 #        ${squirrel_SOURCE_DIR}/include

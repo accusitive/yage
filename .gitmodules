@@ -2,7 +2,7 @@
 	path = flecs
 	url = https://github.com/SanderMertens/flecs
 [submodule "sokol"]
-	path = sokol
+	path = engine/sokol
 	url = https://github.com/floooh/sokol
 [submodule "glfw"]
 	path = pc/glfw
