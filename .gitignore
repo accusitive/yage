@@ -1,6 +1,10 @@
 cmake-build-debug
+cmake-build-release
+cmake-build-switch
+
 build
 engine/cmake-build-debug
+engine/gen
 pc/cmake-build-debug
 ### C++ template
 # Prerequisites
