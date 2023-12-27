@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(yage-pc source/pc_main.cc)
 
 add_subdirectory(glfw)
-find_package(glfw)
 find_package(OpenGL REQUIRED)
 
 target_include_directories(yage-pc PRIVATE ../engine)

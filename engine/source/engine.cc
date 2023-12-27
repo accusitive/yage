@@ -5,11 +5,11 @@
 
 #include <iostream>
 #include "engine.hh"
-#include "sokol/sokol_gfx.h"
+#include "../sokol/sokol_gfx.h"
 #include "util.hh"
 
-#include "gen/f_triangle.glsl"
-#include "gen/v_triangle.glsl"
+#include "../gen/f_triangle.glsl"
+#include "../gen/v_triangle.glsl"
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
