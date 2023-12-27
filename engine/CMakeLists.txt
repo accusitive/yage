@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.21)
 project(yage-project)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -55,7 +55,7 @@ target_include_directories(imgui PUBLIC
 #find_package(glfw)
 #find_package(OpenGL REQUIRED)
 
-message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
+#message([TRACE] " squall_SOURCE_DIR = ${squall_SOURCE_DIR}/squall  ")
 #message([TRACE] " chipmunk_SOURCE_DIR = ${chipmunk_SOURCE_DIR}/  ")
 
 add_library(yage-engine
