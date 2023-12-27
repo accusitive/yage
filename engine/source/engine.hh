@@ -15,13 +15,14 @@
 #include "imgui.h"
 #include "../../sokol_imgui.h"
 #include "resource.hh"
+#include "HandmadeMath.h"
 
 namespace yage {
     class Engine {
     private:
         entt::registry registry;
         ShaderResourceManager shader_resource_manager;
-
+        HMM_Mat4 camera_projection;
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
 
@@ -30,6 +31,9 @@ namespace yage {
 
         int framecount = 0;
 
+        static void
+        SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
+                 const char *filename, void *user_data);
 
     public:
         static Engine &GetEngine() {
@@ -62,7 +66,8 @@ namespace yage {
 
         void RenderScene(int width, int height);
 
-        static sg_shader create_shader_program(const ShaderResource& vs, const ShaderResource& fs);
+        static sg_shader create_shader_program(const ShaderResource &vs, const ShaderResource &fs);
+
 
     };
 

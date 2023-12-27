@@ -5,10 +5,11 @@
 
 #include <iostream>
 #include "engine.hh"
-#include "../sokol/sokol_gfx.h"
+#ifndef YAGE_SWITCH
+#include "../sokol/sokol_log.h"
+#endif
 #include "util.hh"
 #include "resource.hh"
-#include "HandmadeMath.h"
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
@@ -20,6 +21,7 @@ namespace yage {
     Engine::Engine() {
         std::cout << "Engine init" << std::endl;
         this->shader_resource_manager.register_builtin_shader_resources();
+        this->camera_projection = HMM_Orthographic_LH_NO(-64.0f, 64.0f, -64.0f, 64.0f, 0.1f, 128.0f);
     }
 
     sg_shader Engine::create_shader_program(const ShaderResource& vs, const ShaderResource& fs) {
@@ -28,12 +30,31 @@ namespace yage {
         shader_desc.vs.source = vs.source.c_str();
         shader_desc.fs.source = fs.source.c_str();
 
+//        sg_shader_uniform_block_desc shader_uniform_block_desc;
+//        shader_uniform_block_desc.size = sizeof(HMM_Mat4); // 64 !?
+//
+//        shader_uniform_block_desc.layout = SG_UNIFORMLAYOUT_STD140;
+//        sg_shader_uniform_desc shd;
+//
+//        shd.name = "camera",
+//        shd.array_count = 0;
+//        shd.type = SG_UNIFORMTYPE_MAT4;
+//
+//        shader_uniform_block_desc.uniforms[0] = shd;
+//
+//        shader_desc.vs.uniform_blocks[0] = shader_uniform_block_desc;
+////        shader_desc.vs.uniform_blocks[0].
+
         return sg_make_shader(shader_desc);
+    }
+    void Engine::SokolLog(const char* tag, uint32_t log_level, uint32_t log_item, const char* message, uint32_t line_nr, const char* filename, void* user_data) {
+        std::cout << "[" << tag << "]" << " `" << message << "` @" << filename << ":" << line_nr << ". @" << user_data << '@' << std::endl;
     }
 
     void Engine::InitializeGraphics() {
         sg_desc sg_setup_desc = {};
-//        sg_setup_desc.logger.func = slog_func;
+        sg_setup_desc.uniform_buffer_size = sizeof (HMM_Mat4);
+        sg_setup_desc.logger.func = Engine::SokolLog;
         sg_setup(sg_setup_desc);
 
         ImGui::CreateContext();
@@ -107,6 +128,7 @@ namespace yage {
     void Engine::RenderScene(int width, int height) {
         sg_begin_default_pass(&this->pass_action, width, height);
         sg_apply_pipeline(this->pipeline);
+        sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, SG_RANGE_REF(this->camera_projection));
         sg_apply_bindings(&this->bindings);
         sg_draw(0, 3, 1);
         sg_end_pass();
