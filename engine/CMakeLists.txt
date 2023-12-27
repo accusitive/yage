@@ -50,5 +50,6 @@ target_include_directories(yage-engine PUBLIC
 #        ${squirrel_SOURCE_DIR}/include
 #        ${squall_SOURCE_DIR}
 #        ${chipmunk_SOURCE_DIR}/include
+        HandmadeMath/
         ${imgui_SOURCE_DIR}
 )

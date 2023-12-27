@@ -8,7 +8,7 @@
 #include "../sokol/sokol_gfx.h"
 #include "util.hh"
 #include "resource.hh"
-
+#include "HandmadeMath.h"
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
