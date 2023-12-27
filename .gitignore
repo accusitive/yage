@@ -1,2 +1,4 @@
 cmake-build-debug
 build
+engine/cmake-build-debug
+pc/cmake-build-debug

@@ -5,8 +5,8 @@
 	path = sokol
 	url = https://github.com/floooh/sokol
 [submodule "glfw"]
-	path = glfw
+	path = pc/glfw
 	url = https://github.com/glfw/glfw
 [submodule "imgui"]
-	path = imgui
+	path = engine/imgui
 	url = https://github.com/ocornut/imgui
