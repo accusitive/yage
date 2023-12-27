@@ -67,17 +67,10 @@ add_library(yage-engine
 #target_link_libraries(yage-engine chipmunk)
 #target_link_libraries(yage-engine OpenGL::GL)
 target_link_libraries(yage-engine imgui)
-#target_link_libraries(yage-engine sokol)
-
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/shaders.cmake)
 target_include_directories(yage-engine PUBLIC
 #        ${squirrel_SOURCE_DIR}/include
 #        ${squall_SOURCE_DIR}
 #        ${chipmunk_SOURCE_DIR}/include
         ${imgui_SOURCE_DIR}
 )
-
-#add_executable(yage-pc ../pc/main.cc)
-#target_link_libraries(yage-pc yage-engine)
-#target_link_libraries(yage-pc ../glfw)
-#
-#target_include_directories(yage-pc PUBLIC .)

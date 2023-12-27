@@ -4,6 +4,7 @@
 
 #ifndef YAGE_ENGINE_HH
 #define YAGE_ENGINE_HH
+
 #include <string>
 //#include "squall/squall_vmstd.hpp"
 //#define FLECS_CUSTOM_BUILD
@@ -33,6 +34,8 @@ namespace yage {
         sg_pipeline pipeline = {};
         sg_bindings bindings = {};
 
+        int framecount = 0;
+
 
     public:
         static Engine &GetEngine() {
@@ -52,17 +55,15 @@ namespace yage {
 
         void InitializeGraphics();
 
-        void DrawLoop();
 
         void Render(int width, int height);
-//#ifndef YAGE_SWITCH
-//
-//        static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-//
-//        static void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
-//
-//        static void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-//#endif
+
+        static void KeyCallback(int key, int scancode, int action, int mods);
+
+        static void CursorPosCallback(double xpos, double ypos);
+
+        static void MouseButtonCallback(int button, int action, int mods);
+
         void TestCallbacks(int num);
 
         void RenderScene(int width, int height);

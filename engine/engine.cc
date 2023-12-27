@@ -4,51 +4,29 @@
 
 
 #include <iostream>
-#include <fstream>
 #include "engine.hh"
 #include "sokol/sokol_gfx.h"
-//#include "sokol/sokol_log.h"
-//#ifndef YAGE_SWITCH
+
+
+#include "gen/f_triangle.glsl"
+#include "gen/v_triangle.glsl"
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
         return "Yage Game Engine (this is written in code shared by PC and Switch!)";
     }
 
-    Engine::~Engine() {
-    }
+    Engine::~Engine() = default;
 
     Engine::Engine() {
         std::cout << "Engine init" << std::endl;
     }
-//    void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-////        HandleKeyPress(key, scancode, mods);
-//    }
 
     sg_shader Engine::CreateShader(const std::string &shader_name) {
         sg_shader_desc shader_desc = {};
-        auto vsh = "assets/shaders/" + shader_name + ".vsh";
-        auto fsh = "assets/shaders/" + shader_name + ".fsh";
-        std::ifstream vsh_file(vsh);
-        std::ifstream fsh_file(fsh);
-        std::string vsh_content((std::istreambuf_iterator<char>(vsh_file)), std::istreambuf_iterator<char>());
-        std::string fsh_content((std::istreambuf_iterator<char>(fsh_file)), std::istreambuf_iterator<char>());
 
-        if (!vsh_file.is_open()) {
-            std::cerr << "Failed to open vertex shader file: " << vsh << std::endl;
-            perror("Error opening file");
-        }
-
-        if (!fsh_file.is_open()) {
-            std::cerr << "Failed to open fragment shader file: " << fsh << std::endl;
-            perror("Error opening file");
-        }
-
-        vsh_file.close();
-        fsh_file.close();
-
-        shader_desc.vs.source = vsh_content.c_str();
-        shader_desc.fs.source = fsh_content.c_str();
+        shader_desc.vs.source = v_triangleShaderSource[0];
+        shader_desc.fs.source = f_triangleShaderSource[0];
 
         return sg_make_shader(shader_desc);
     }
@@ -71,8 +49,6 @@ namespace yage {
         sg_buffer_desc buffer_desc = {};
         buffer_desc.data = SG_RANGE(vertices);
         sg_buffer vertex_buffer = sg_make_buffer(buffer_desc);
-
-        sg_shader_desc shader_desc = {};
 
         sg_shader shd = Engine::CreateShader("triangle");
         sg_pipeline_desc pipeline_desc = {};
@@ -99,20 +75,6 @@ namespace yage {
     void Engine::TestCallbacks(int num) {
         std::cout << "Testing callback works." << num << std::endl;
     }
-
-#ifndef YAGE_SWITCH
-
-    void Engine::DrawLoop() {
-//        while (!glfwWindowShouldClose(this->mainWindow)) {
-//            int width, height;
-//            glfwGetFramebufferSize(this->mainWindow, &width, &height);
-//            this->Render(width, height);
-//            glfwSwapBuffers(this->mainWindow);
-//            glfwPollEvents();
-//        }
-    }
-
-#endif
 
     void Engine::Render(int width, int height) {
         // ImGui Frame setup
@@ -148,18 +110,18 @@ namespace yage {
     }
 
 //#ifndef YAGE_SWITCH
-//    void Engine::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+//    void Engine::KeyCallback(int key, int scancode, int action, int mods) {
 //        Engine &engine = Engine::GetEngine();
 //        engine.TestCallbacks(key);
 //    }
-//
-//    void Engine::CursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
-////        Engine::GetEngine().TestCallbacks(key);
-//        simgui_add_mouse_pos_event((float) xpos, (float) ypos);
-//    }
-//    void Engine::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
-//        simgui_add_mouse_button_event(button, action);
-//    }
+
+    void Engine::CursorPosCallback(double xpos, double ypos) {
+        simgui_add_mouse_pos_event((float) xpos, (float) ypos);
+    }
+
+    void Engine::MouseButtonCallback(int button, int action, int mods) {
+        simgui_add_mouse_button_event(button, action);
+    }
 //#endif
 } // yaga
 

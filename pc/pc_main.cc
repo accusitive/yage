@@ -3,8 +3,18 @@
 #define SOKOL_IMGUI_NO_SOKOL_APP
 
 #include "engine.hh"
+#include <iostream>
+
 #define GLFW_INCLUDE_NONE
+
 #include "GLFW/glfw3.h"
+void CursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
+    yage::Engine::CursorPosCallback(xpos, ypos);
+}
+
+void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+    yage::Engine::MouseButtonCallback(button, action, mods);
+}
 
 int main(int argc, char *argv[]) {
     glfwInit();
@@ -15,23 +25,21 @@ int main(int argc, char *argv[]) {
     GLFWwindow *window = glfwCreateWindow(640, 480, yage::Engine::GetWindowTitle().c_str(), 0, 0);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
-//    glfwSetKeyCallback(window, Engine::KeyCallback);
-//    glfwSetCursorPosCallback(window, Engine::CursorPosCallback);
-//    glfwSetMouseButtonCallback(window, Engine::MouseButtonCallback);
-//    this->mainWindow = window;
-//    std::cout << "Engine init" << std::endl;
+//    glfwSetKeyCallback(window, KeyCallback);
+    glfwSetCursorPosCallback(window, CursorPosCallback);
+    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    std::cout << "Engine init" << std::endl;
 
     auto e = &yage::Engine::GetEngine();
     e->InitializeGraphics();
-
-//    e->DrawLoop();
-        while (!glfwWindowShouldClose(window)) {
-            int width, height;
-            glfwGetFramebufferSize(window, &width, &height);
-            e->Render(width, height);
-            glfwSwapBuffers(window);
-            glfwPollEvents();
-        }
+    // Draw loop
+    while (!glfwWindowShouldClose(window)) {
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        e->Render(width, height);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
     glfwDestroyWindow(window);
-
 }
+
