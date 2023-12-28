@@ -5,11 +5,16 @@
 
 #include <iostream>
 #include "engine.hh"
+
 #ifndef YAGE_SWITCH
+
 #include "../sokol/sokol_log.h"
+
 #endif
+
 #include "util.hh"
-#include "resource.hh"
+//#include "resource.hh"
+#include "../gen/triangle.glsl.h"
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
@@ -20,15 +25,16 @@ namespace yage {
 
     Engine::Engine() {
         std::cout << "Engine init" << std::endl;
-        this->shader_resource_manager.register_builtin_shader_resources();
+//        this->shader_resource_manager.register_builtin_shader_resources();
         this->camera_projection = HMM_Orthographic_LH_NO(-64.0f, 64.0f, -64.0f, 64.0f, 0.1f, 128.0f);
     }
 
-    sg_shader Engine::create_shader_program(const ShaderResource& vs, const ShaderResource& fs) {
+    sg_shader Engine::create_shader_program() {
+
         sg_shader_desc shader_desc = {};
 
-        shader_desc.vs.source = vs.source.c_str();
-        shader_desc.fs.source = fs.source.c_str();
+//        shader_desc.vs.source = vs.source.c_str();
+//        shader_desc.fs.source = fs.source.c_str();
 
 //        sg_shader_uniform_block_desc shader_uniform_block_desc;
 //        shader_uniform_block_desc.size = sizeof(HMM_Mat4); // 64 !?
@@ -47,13 +53,16 @@ namespace yage {
 
         return sg_make_shader(shader_desc);
     }
-    void Engine::SokolLog(const char* tag, uint32_t log_level, uint32_t log_item, const char* message, uint32_t line_nr, const char* filename, void* user_data) {
-        std::cout << "[" << tag << "]" << " `" << message << "` @" << filename << ":" << line_nr << ". @" << user_data << '@' << std::endl;
+
+    void Engine::SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
+                          const char *filename, void *user_data) {
+        std::cout << "[" << tag << "]" << " `" << message << "` @" << filename << ":" << line_nr << ". @" << user_data
+                  << '@' << std::endl;
     }
 
     void Engine::InitializeGraphics() {
         sg_desc sg_setup_desc = {};
-        sg_setup_desc.uniform_buffer_size = sizeof (HMM_Mat4);
+        sg_setup_desc.uniform_buffer_size = sizeof(HMM_Mat4) * 64;
         sg_setup_desc.logger.func = Engine::SokolLog;
         sg_setup(sg_setup_desc);
 
@@ -71,24 +80,39 @@ namespace yage {
         buffer_desc.data = SG_RANGE(vertices);
         sg_buffer vertex_buffer = sg_make_buffer(buffer_desc);
 
-        sg_shader shd = Engine::create_shader_program(this->shader_resource_manager.get_shader_resource(V_TRIANGLE).value(), this->shader_resource_manager.get_shader_resource(F_TRIANGLE).value());
+//        sg_shader shd = Engine::create_shader_program(
+//                this->shader_resource_manager.get_shader_resource(V_TRIANGLE).value(),
+//                this->shader_resource_manager.get_shader_resource(F_TRIANGLE).value());
+//        pipeline_desc.layout.attrs[ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT4;
+//
+//        pipeline_desc.layout.attrs[ATTR_vs_color0].format = SG_VERTEXFORMAT_FLOAT4;
+
+//    };
+//        pipeline_desc.shader = shd;
+
+//        sg_vertex_layout_state vls = {};
+
+//        vls.attrs[0].
+//                format = SG_VERTEXFORMAT_FLOAT3;
+//        vls.attrs[1].
+//                format = SG_VERTEXFORMAT_FLOAT4;
+//
+//        pipeline_desc.layout = vls;
+//        sg_pipeline_desc pipeline_desc =
+        sg_shader shd = sg_make_shader(triangle_shader_desc(sg_query_backend()));
         sg_pipeline_desc pipeline_desc = {};
         pipeline_desc.shader = shd;
+        pipeline_desc.layout.attrs[ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT4;
+        pipeline_desc.layout.attrs[ATTR_vs_color0].format = SG_VERTEXFORMAT_FLOAT4;
 
-        sg_vertex_layout_state vls = {};
-
-        vls.attrs[0].format = SG_VERTEXFORMAT_FLOAT3;
-        vls.attrs[1].format = SG_VERTEXFORMAT_FLOAT4;
-
-        pipeline_desc.layout = vls;
         this->pipeline = sg_make_pipeline(pipeline_desc);
 
-        this->bindings.vertex_buffers[0] = vertex_buffer;
+        this->bindings.vertex_buffers[0] =
+                vertex_buffer;
 
         this->pass_action = {};
         this->pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
         this->pass_action.colors[0].clear_value = {0.0f, 0.5f, 1.0f, 1.0f};
-
         this->imgui_pass_action = {};
         this->imgui_pass_action.colors[0].load_action = SG_LOADACTION_LOAD;
     }
@@ -128,8 +152,8 @@ namespace yage {
     void Engine::RenderScene(int width, int height) {
         sg_begin_default_pass(&this->pass_action, width, height);
         sg_apply_pipeline(this->pipeline);
-        sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, SG_RANGE_REF(this->camera_projection));
         sg_apply_bindings(&this->bindings);
+        sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_per_frame, SG_RANGE_REF(this->camera_projection));
         sg_draw(0, 3, 1);
         sg_end_pass();
     }

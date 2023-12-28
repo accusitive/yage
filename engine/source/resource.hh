@@ -5,9 +5,9 @@
 #include <map>
 #include <utility>
 #include <optional>
-#include "../gen/f_triangle.glsl"
-#include "../gen/v_triangle.glsl"
-
+//#include "../gen/f_triangle.glsl"
+//#include "../gen/v_triangle.glsl"
+#ifdef disabled
 namespace yage {
     static const std::string V_TRIANGLE = "v_triangle";
     static const std::string F_TRIANGLE = "f_triangle";
@@ -69,3 +69,4 @@ namespace yage {
 } // yage
 
 #endif //YAGE_RESOURCE_HH
+#endif //disabled

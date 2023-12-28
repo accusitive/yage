@@ -16,3 +16,6 @@
 [submodule "engine/HandmadeMath"]
 	path = engine/HandmadeMath
 	url = https://github.com/HandmadeMath/HandmadeMath
+[submodule "engine/sokol-tools-bin"]
+	path = engine/sokol-tools-bin
+	url = https://github.com/floooh/sokol-tools-bin

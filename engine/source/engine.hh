@@ -21,7 +21,7 @@ namespace yage {
     class Engine {
     private:
         entt::registry registry;
-        ShaderResourceManager shader_resource_manager;
+//        ShaderResourceManager shader_resource_manager;
         HMM_Mat4 camera_projection;
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
@@ -66,7 +66,7 @@ namespace yage {
 
         void RenderScene(int width, int height);
 
-        static sg_shader create_shader_program(const ShaderResource &vs, const ShaderResource &fs);
+        static sg_shader create_shader_program();
 
 
     };

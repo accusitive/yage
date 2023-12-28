@@ -44,12 +44,29 @@ add_library(yage-engine
 target_link_libraries(yage-engine EnTT::EnTT)
 target_link_libraries(yage-engine imgui)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/shaders.cmake)
+#include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/shaders.cmake)
+#set(SHDC "${CMAKE_SOURCE_DIR}/engine/sokol-tools-bin/bin/linux/sokol-shdc")
+#add_custom_target(compile_shaders ALL COMMAND ${SHDC} "--input" "${CMAKE_SOURCE_DIR}/assets/shaders/f_triangle.glsl" "--output" "${CMAKE_SOURCE_DIR}/engine/gen/f_triangle.glsl.h" "--slang" "glsl330"
+#        COMMENT "Compiling shaders..." VERBATIM)
+
+#add_dependencies(yage-engine compile_shaders)
+set(SHDC "${CMAKE_SOURCE_DIR}/engine/sokol-tools-bin/bin/linux/sokol-shdc")
+
+function(compile_shader SHADER_INPUT SHADER_OUTPUT SLANG)
+    execute_process(
+            COMMAND ${SHDC} "--input" "${CMAKE_SOURCE_DIR}/assets/shaders/${SHADER_INPUT}" "--output" "${CMAKE_SOURCE_DIR}/engine/gen/${SHADER_OUTPUT}" "--slang" "${SLANG}"
+            RESULT_VARIABLE result
+    )
+    if(result)
+        message(FATAL_ERROR "Failed to compile shader.")
+    endif()
+endfunction()
+compile_shader("triangle.glsl" "triangle.glsl.h" "glsl330")
 
 target_include_directories(yage-engine PUBLIC
-#        ${squirrel_SOURCE_DIR}/include
-#        ${squall_SOURCE_DIR}
-#        ${chipmunk_SOURCE_DIR}/include
+        #        ${squirrel_SOURCE_DIR}/include
+        #        ${squall_SOURCE_DIR}
+        #        ${chipmunk_SOURCE_DIR}/include
         HandmadeMath/
         ${imgui_SOURCE_DIR}
 )
