@@ -29,7 +29,8 @@ namespace yage {
         sg_pipeline pipeline = {};
         sg_bindings bindings = {};
 
-        int framecount = 0;
+        std::vector<float> scene;
+        int frame_count = 0;
 
         static void
         SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
