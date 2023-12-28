@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
     gladLoadGL();
 
     // Initialize our scene
-    e->InitializeGraphics();
+    e->Initialize();
 
     // Configure our supported input layout: a single player with standard controller styles
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);

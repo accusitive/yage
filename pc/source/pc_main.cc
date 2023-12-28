@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Engine init" << std::endl;
 
     auto e = &yage::Engine::GetEngine();
-    e->InitializeGraphics();
+    e->Initialize();
     // Draw loop
     while (!glfwWindowShouldClose(window)) {
         int width, height;

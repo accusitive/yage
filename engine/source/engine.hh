@@ -22,7 +22,7 @@ namespace yage {
     private:
         entt::registry registry;
 //        ShaderResourceManager shader_resource_manager;
-        HMM_Mat4 camera_projection;
+        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-64.0f, 64.0f, -64.0f, 64.0f, 0.1f, 128.0f);
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
 
@@ -30,6 +30,7 @@ namespace yage {
         sg_bindings bindings = {};
 
         std::vector<float> scene;
+        sg_buffer vertex_buffer;
         int frame_count = 0;
 
         static void
@@ -52,7 +53,7 @@ namespace yage {
 
         static std::string GetWindowTitle();
 
-        void InitializeGraphics();
+        void Initialize();
 
 
         void Render(int width, int height);
@@ -70,6 +71,9 @@ namespace yage {
         static sg_shader create_shader_program();
 
 
+        void RenderQuad(float x, float y, float width, float height);
+
+        void RenderDebugQuad(float x, float y, float width, float height);
     };
 
 } // yaga
