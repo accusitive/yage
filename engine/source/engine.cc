@@ -144,7 +144,6 @@ namespace yage {
         ImGui::Text("scene_size: %lu bytes", scene_size);
 
         sg_update_buffer(this->vertex_buffer, {this->scene.data(), scene_size});
-        this->bindings.vertex_buffers[0] = this->vertex_buffer;
         sg_begin_default_pass(&this->pass_action, width, height);
         sg_apply_pipeline(this->pipeline);
         sg_apply_bindings(this->bindings);
