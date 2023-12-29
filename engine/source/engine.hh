@@ -86,13 +86,17 @@ namespace yage {
 
         void CreateGroundBox();
 
-        void TempHandleJump();
+        void InputHandleJump();
 
         void CreatePlayer();
 
         bool IsPhysicsBodyOnGround(b2Body* physics_body);
 
-        void HandleMovement(float x);
+        void InputHandleHorizontal(float x);
+
+        void HandleMovement();
+
+        void DebugStick(int32_t stick);
     };
 
 } // yaga

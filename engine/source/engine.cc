@@ -120,11 +120,10 @@ namespace yage {
         registry.emplace<ComponentSprite>(entity);
         registry.emplace<ComponentPhysicsBody>(entity, body);
         registry.emplace<ComponentPlayer>(entity);
-        registry.emplace<ComponentPlayerInput>(entity);
-//        registry.emplace<ComponentMovement>(entity, ComponentMovement {
-//            .move_speed = 1.0f,
-//            .jump_height = 2.0f,
-//        });
+        registry.emplace<ComponentPlayerInput>(entity, ComponentPlayerInput{
+                .move_speed = 10.0f,
+                .jump_height = 25.0f,
+        });
 
 
     }
@@ -184,7 +183,7 @@ namespace yage {
         this->frame_count++;
         this->scene.clear();
         auto start = std::chrono::high_resolution_clock::now();
-        this->world.Step(1.0f / 60.0f, 6, 2);
+
 
         // ImGui Frame setup
         simgui_frame_desc_t frame_desc = {};
@@ -199,9 +198,12 @@ namespace yage {
 
         // Begin frame render
         ImGui::Begin("Yet Another Game Engine", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::Text("Previous frame time: %f", this->previous_frametime);
+        ImGui::Text("Previous: %f", this->previous_frametime);
         ImGui::Text("Frame count: %i", this->frame_count);
         ImGui::Text("Platform: %s", getBuild());
+
+        this->HandleMovement();
+        this->world.Step(1.0f / 60.0f, 6, 2);
         this->RenderScene(width, height);
 
         // End frame render
@@ -267,16 +269,58 @@ namespace yage {
         return false;
     }
 
-    void Engine::TempHandleJump() {
+    void Engine::HandleMovement() {
         this->registry.view<const ComponentPlayerInput, const ComponentPhysicsBody>().each(
-                [this](auto& player_input, auto& physics_body) {
-                    if (this->IsPhysicsBodyOnGround(physics_body.body))
-//                        physics_body.body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, YAGE_UNIT_SIZE * 100.0f), true);
-                        physics_body.body->SetLinearVelocity(b2Vec2(0.0f, YAGE_UNIT_SIZE * 10.0f));
+                [this](auto entity, ComponentPlayerInput player_input, ComponentPhysicsBody physics_body) {
+                    ImGui::TreeNodeEx("Player Movement", ImGuiTreeNodeFlags_DefaultOpen);
+
+                    ImGui::Text("Should Jump: %b", player_input.should_jump);
+                    ImGui::Text("Horizontal: %f", player_input.horizontal);
+                    ImGui::Text("Debug stick: %i", player_input.debug_stick);
+
+                    ImGui::TreePop();
+
+                    if (player_input.should_jump) {
+                        this->registry.patch<ComponentPlayerInput>(entity, [](ComponentPlayerInput &player_input) {
+                            player_input.should_jump = false;
+                        });
+                        physics_body.body->SetLinearVelocity(b2Vec2(0.0f, player_input.jump_height));
+
+                    }
+                    if (player_input.horizontal != 0.0f) {
+                        physics_body.body->SetLinearVelocity(
+                                b2Vec2(player_input.horizontal * player_input.move_speed,
+                                       physics_body.body->GetLinearVelocity().y));
+                    }
                 });
     }
-    void Engine::HandleMovement(float x) {
 
+    void Engine::InputHandleJump() {
+        this->registry.view<const ComponentPlayerInput, const ComponentPhysicsBody>().each(
+                [this](auto entity, ComponentPlayerInput player_input, ComponentPhysicsBody physics_body) {
+                    auto grounded = this->IsPhysicsBodyOnGround(physics_body.body);
+                    this->registry.patch<ComponentPlayerInput>(entity, [grounded](auto &player_input) {
+                        player_input.should_jump = grounded;
+                    });
+                });
+    }
+
+    void Engine::DebugStick(int32_t stick) {
+        this->registry.view<const ComponentPlayerInput, const ComponentPhysicsBody>().each(
+                [this, stick](auto entity, ComponentPlayerInput player_input, ComponentPhysicsBody physics_body) {
+                    this->registry.patch<ComponentPlayerInput>(entity, [stick](auto &player_input) {
+                        player_input.debug_stick = stick;
+                    });
+                });
+    }
+
+    void Engine::InputHandleHorizontal(float x) {
+        this->registry.view<const ComponentPlayerInput, const ComponentPhysicsBody>().each(
+                [this, x](auto entity, ComponentPlayerInput player_input, ComponentPhysicsBody physics_body) {
+                    this->registry.patch<ComponentPlayerInput>(entity, [x](auto &player_input) {
+                        player_input.horizontal = x;
+                    });
+                });
     }
 //#endif
 } // yaga

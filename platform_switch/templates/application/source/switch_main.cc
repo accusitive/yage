@@ -184,6 +184,15 @@ static void setMesaConfig()
     //setenv("NV50_PROG_DEBUG", "1", 1);
     //setenv("NV50_PROG_CHIPSET", "0x120", 1);
 }
+float RemapStick(s32 input) {
+    short old_min = -32767;
+    short old_max = 32767;
+    float new_min = -1.0;
+    float new_max = 1.0;
+
+    return (static_cast<float>(input - old_min) / static_cast<float>(old_max - old_min)) * (new_max - new_min) + new_min;
+
+}
 
 int main(int argc, char* argv[])
 {
@@ -218,8 +227,13 @@ int main(int argc, char* argv[])
             break;
 
         if(kDown & HidNpadButton_B) {
-            e->TempHandleJump();
+            e->InputHandleJump();
         }
+//        padGetStickPos(&pad,)
+        auto sx = pad.sticks[0].x;
+        auto remapped_stick = RemapStick(sx);
+        e->InputHandleHorizontal(remapped_stick);
+        e->DebugStick(sx);
         e->Render(1280, 720);
 
         eglSwapBuffers(s_display, s_surface);
