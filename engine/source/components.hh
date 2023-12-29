@@ -6,13 +6,16 @@
 #define YAGE_COMPONENTS_HH
 
 #include "box2d/box2d.h"
-
+enum Sprite{
+    Camel,
+    Sand
+};
 struct ComponentPosition {
     float x;
     float y;
 };
 struct ComponentSprite {
-
+    Sprite sprite = Camel;
 };
 struct ComponentPhysicsBody {
     b2Body *body;

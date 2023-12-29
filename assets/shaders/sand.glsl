@@ -1,8 +1,8 @@
 #pragma sokol @ctype mat4 HMM_Mat4
 #pragma sokol @ctype vec4 HMM_Vec4
 
-#pragma sokol @vs vs
-layout(set = 0, binding = 0) uniform vs_per_frame {
+#pragma sokol @vs sand_vs
+layout(set = 0, binding = 0) uniform sand_uniforms {
     mat4 viewproj;
 };
 
@@ -19,7 +19,7 @@ void main() {
 }
 #pragma sokol @end
 
-#pragma sokol @fs fs
+#pragma sokol @fs sand_fs
 layout(set = 0, binding = 1) uniform texture2D tex;
 layout(set = 0, binding = 2) uniform sampler smp;
 
@@ -30,7 +30,7 @@ float rand(vec2 co){
 }
 
 void main() {
-    frag_color = texture(sampler2D(tex,smp), vec2(uv.s, 1.0f - uv.t));
+    frag_color = texture(sampler2D(tex,smp), vec2(rand(uv), 1.0f - rand(uv)));
 }
 #pragma sokol @end
-#pragma sokol @program triangle vs fs
+#pragma sokol @program sand sand_vs sand_fs

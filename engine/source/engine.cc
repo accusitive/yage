@@ -9,10 +9,11 @@
 
 #include "engine.hh"
 #include "util.hh"
-#include "../gen/triangle.glsl.h"
 #include "box2d/box2d.h"
 #include "components.hh"
 #include "../gen/camel.png.h"
+#include "../gen/camel.glsl.h"
+#include "../gen/sand.glsl.h"
 
 int decodePNG(std::vector<unsigned char> &out_image, unsigned long &image_width, unsigned long &image_height,
               const unsigned char *in_png, size_t in_size, bool convert_to_rgba32 = true);
@@ -27,8 +28,6 @@ namespace yage {
 
     Engine::Engine() {
         std::cout << "Engine init" << std::endl;
-//        this->shader_resource_manager.register_builtin_shader_resources();
-
     }
 
     void Engine::SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
@@ -38,20 +37,28 @@ namespace yage {
     }
 
 
-    void Engine::RenderQuad(float x, float y, float width, float height) {
+    void Engine::RenderQuad(float x, float y, float width, float height, bool is_camel) {
         float vertices[] = {
-                x, y,                   0.0f, 0.0f, // top left
-                x + width, y,           1.0f, 0.0f, // top right
-                x, y + height,          0.0f, 1.0f, // bottom left
+                x, y, 0.0f, 0.0f, // top left
+                x + width, y, 1.0f, 0.0f, // top right
+                x, y + height, 0.0f, 1.0f, // bottom left
 
-                x, y + height,          0.0f, 1.0f, // bottom left
-                x + width, y + height,  1.0f, 1.0f, // bottom right
-                x + width, y,           1.0f, 0.0f, // top right
+                x, y + height, 0.0f, 1.0f, // bottom left
+                x + width, y + height, 1.0f, 1.0f, // bottom right
+                x + width, y, 1.0f, 0.0f, // top right
         };
 
         const int num_verts = 6;
         const int vert_size = 4;
-        this->scene.insert(this->scene.end(), vertices, vertices + (num_verts * vert_size));
+        if (is_camel) {
+            this->camel_scene.insert(this->camel_scene.end(), vertices, vertices + (num_verts * vert_size));
+
+        } else {
+            this->sand_scene.insert(this->sand_scene.end(), vertices, vertices + (num_verts * vert_size));
+
+        }
+
+
     }
 
     void Engine::PopulateWithDebugEntities() {
@@ -70,7 +77,7 @@ namespace yage {
             b2Body *body = world.CreateBody(&bodyDef);
 
             b2PolygonShape dynamicBox;
-            dynamicBox.SetAsBox(YAGE_UNIT_SIZE, YAGE_UNIT_SIZE);
+            dynamicBox.SetAsBox(YAGE_UNIT_SIZE / 2.0f, YAGE_UNIT_SIZE / 2.0f);
 
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &dynamicBox;
@@ -91,11 +98,12 @@ namespace yage {
     void Engine::CreatePlayer() {
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
-        bodyDef.position.Set(0.0f, 0.0f);
+        bodyDef.position.Set(YAGE_WORLD_SIZE / 2.0f, 50.0f);
+//        bodyDef.gravityScale = 0.0f;
         b2Body *body = world.CreateBody(&bodyDef);
 
         b2PolygonShape dynamicBox;
-        dynamicBox.SetAsBox(YAGE_UNIT_SIZE, YAGE_UNIT_SIZE);
+        dynamicBox.SetAsBox(YAGE_UNIT_SIZE / 2.0f, YAGE_UNIT_SIZE / 2.0f);
 
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &dynamicBox;
@@ -117,16 +125,38 @@ namespace yage {
 
     }
 
+#define YAGE_WORLD_GROUNDBOX_WIDTH YAGE_WORLD_SIZE * 2.0f
+#define YAGE_GROUND_BODY_HEIGHT YAGE_UNIT_SIZE * 20.0f
+
     void Engine::CreateGroundBox() {
         b2BodyDef ground_body_def;
-        ground_body_def.position.Set(-YAGE_WORLD_SIZE, 0.0f);
+        ground_body_def.position.Set(0.0f, 0.0f);
         b2Body *ground_body = this->world.CreateBody(&ground_body_def);
         this->ground_body = ground_body;
         b2PolygonShape ground_box;
-        ground_box.SetAsBox(YAGE_WORLD_SIZE * 2.0f, 10.0f);
+        ground_box.SetAsBox(YAGE_WORLD_GROUNDBOX_WIDTH / 2.0f, YAGE_GROUND_BODY_HEIGHT / 2.0f);
         ground_body->CreateFixture(&ground_box, 0.0f);
 
 
+    }
+
+    sg_image_desc Engine::CreateTexture(unsigned char *data, unsigned long size) {
+
+        std::vector<unsigned char> texture_pixels;
+        auto t = &texture_pixels;
+        unsigned long w;
+        unsigned long h;
+        decodePNG(*t, w, h, data, size, true);
+
+        sg_image_data camel_image_data = {};
+        camel_image_data.subimage[0][0] = sg_range(texture_pixels.data(), texture_pixels.size());
+
+        sg_image_desc camel_image_desc = {};
+        camel_image_desc.data = camel_image_data;
+        camel_image_desc.width = 64;
+        camel_image_desc.height = 64;
+        camel_image_desc.label = "camel-texture";
+        return camel_image_desc;
     }
 
     void Engine::Initialize() {
@@ -142,47 +172,44 @@ namespace yage {
         simgui_desc_t desc = {};
         simgui_setup(desc);
 
-        sg_shader shd = sg_make_shader(triangle_shader_desc(sg_query_backend()));
+        sg_shader shd = sg_make_shader(camel_shader_desc(sg_query_backend()));
         sg_pipeline_desc pipeline_desc = {};
         pipeline_desc.shader = shd;
-        pipeline_desc.layout.attrs[ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT2;
-        pipeline_desc.layout.attrs[ATTR_vs_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
+        // Same for camel and sand
+        pipeline_desc.layout.attrs[ATTR_camel_vs_position].format = SG_VERTEXFORMAT_FLOAT2;
+        pipeline_desc.layout.attrs[ATTR_camel_vs_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
 
         sg_buffer_desc buffer_desc = {};
         buffer_desc.usage = SG_USAGE_STREAM;
         buffer_desc.size = (32768) * sizeof(float); // BUFFERSIZE
-        sg_buffer vbx = sg_make_buffer(buffer_desc);
-
-        std::vector<unsigned char> camel_pixels;
-        auto t = &camel_pixels;
-        unsigned long w;
-        unsigned long h;
-        decodePNG(*t, w, h, assets_textures_camel_png, assets_textures_camel_png_len, true);
-
-        sg_image_data camel_image_data = {};
-        camel_image_data.subimage[0][0] = sg_range(camel_pixels.data(), camel_pixels.size());
-
-        sg_image_desc camel_image_desc = {};
-        camel_image_desc.data = camel_image_data;
-        camel_image_desc.width = 64;
-        camel_image_desc.height = 64;
-        camel_image_desc.label = "camel-texture";
+        this->camel_vertex_buffer = sg_make_buffer(buffer_desc);
+        this->sand_vertex_buffer = sg_make_buffer(buffer_desc);
 
         sg_sampler_desc camel_sampler_desc = {};
         camel_sampler_desc.label = "camel-sampler";
+        sg_image_desc camel_image_desc = this->CreateTexture(assets_textures_camel_png, assets_textures_camel_png_len);
 
-        this->bindings.vertex_buffers[0] = vbx;
-        this->bindings.fs.images[SLOT_tex] = sg_make_image(camel_image_desc);
-        this->bindings.fs.samplers[SLOT_smp] = sg_make_sampler(camel_sampler_desc);
+        this->camel_bindings.vertex_buffers[0] = this->camel_vertex_buffer;
+        this->camel_bindings.fs.images[SLOT_tex] = sg_make_image(camel_image_desc);
+        this->camel_bindings.fs.samplers[SLOT_smp] = sg_make_sampler(camel_sampler_desc);
+        this->camel_pipeline = sg_make_pipeline(pipeline_desc);
 
-        this->pipeline = sg_make_pipeline(pipeline_desc);
+        sg_sampler_desc sand_sampler_desc = {};
+        sand_sampler_desc.label = "camel-sampler";
+//        sg_image_desc sand_image_desc = this->CreateTexture(assets_textures_camel_png, assets_textures_camel_png_len);
+
+        pipeline_desc.shader = sg_make_shader(sand_shader_desc(sg_query_backend()));
+        this->sand_bindings.vertex_buffers[0] = this->sand_vertex_buffer;
+        this->sand_bindings.fs.images[SLOT_tex] = this->camel_bindings.fs.images[SLOT_tex];
+        this->sand_bindings.fs.samplers[SLOT_smp] = sg_make_sampler(sand_sampler_desc);
+        this->sand_pipeline = sg_make_pipeline(pipeline_desc);
+
 
         this->pass_action = {};
         this->pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
         this->pass_action.colors[0].clear_value = {0.0f, 0.5f, 1.0f, 1.0f};
         this->imgui_pass_action = {};
         this->imgui_pass_action.colors[0].load_action = SG_LOADACTION_LOAD;
-        this->vertex_buffer = vbx;
     }
 
     void Engine::TestCallbacks(int num) {
@@ -191,7 +218,8 @@ namespace yage {
 
     void Engine::Render(int width, int height) {
         this->frame_count++;
-        this->scene.clear();
+        this->camel_scene.clear();
+        this->sand_scene.clear();
         auto start = std::chrono::high_resolution_clock::now();
 
 
@@ -234,10 +262,10 @@ namespace yage {
 
         this->registry.view<const ComponentSprite, const ComponentPosition>().each(
                 [this](const auto &sprite, ComponentPosition pos) {
-                    this->RenderQuad(pos.x, pos.y, YAGE_UNIT_SIZE * 2.0f, YAGE_UNIT_SIZE * 2.0f);
+                    this->RenderQuad(pos.x, pos.y, YAGE_UNIT_SIZE, YAGE_UNIT_SIZE, true);
                 });
-        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, YAGE_WORLD_SIZE * 2.0f,
-                         11.56f);
+        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, YAGE_WORLD_SIZE,
+                         (YAGE_GROUND_BODY_HEIGHT + YAGE_UNIT_SIZE) / 2.0f, false);
         registry.view<ComponentPosition, ComponentPhysicsBody>().each(
                 [this](auto entity, ComponentPosition &pos, ComponentPhysicsBody &physics_body) {
                     this->registry.patch<ComponentPosition>(entity, [physics_body](ComponentPosition &pos) {
@@ -245,23 +273,47 @@ namespace yage {
                         pos.y = physics_body.body->GetPosition().y;
                     });
                 });
+//        this->registry.view<const ComponentPlayer, const ComponentPosition>().each(
+//                [this](const auto &player, const auto &pos) {
+//                    auto hx = pos.x / YAGE_UNIT_SIZE;
+//                    auto hy = pos.y / YAGE_UNIT_SIZE;
+//
+//                    this->camera_projection = HMM_Orthographic_LH_NO(0.0f + hx, YAGE_WORLD_SIZE + hx,
+//                                                                     0.0f + hy,
+//                                                                     YAGE_WORLD_SIZE + hy, 0.1f, 128.0f);
+//                });
+
         // Update scene data
 
-        auto scene_size = this->scene.size() * sizeof(float);
+        auto camel_scene_size = this->camel_scene.size() * sizeof(float);
+        auto sand_scene_size = this->sand_scene.size() * sizeof(float);
 
-        if(ImGui::TreeNodeEx("Rendering Info"), ImGuiTreeNodeFlags_DefaultOpen) {
+        if (ImGui::TreeNodeEx("Rendering Info"), ImGuiTreeNodeFlags_DefaultOpen) {
             ImGui::Text("Frame count: %i", this->frame_count);
-            ImGui::Text("Vertices: %zu", this->scene.size() / 4);
-            ImGui::Text("Scene size: %lu bytes", scene_size);
+            ImGui::Text("Camel Vertices: %zu", this->camel_scene.size() / 4);
+            ImGui::Text("Sand Vertices: %zu", this->sand_scene.size() / 4);
+
+            ImGui::Text("Camel Scene size: %lu bytes", camel_scene_size);
+            ImGui::Text("Sand Scene size: %lu bytes", sand_scene_size);
             ImGui::Text("Previous: %f", this->previous_frametime);
         }
+        // Draw the camels
+        sg_update_buffer(this->camel_vertex_buffer, {this->camel_scene.data(), camel_scene_size});
+        sg_update_buffer(this->sand_vertex_buffer, {this->sand_scene.data(), sand_scene_size});
 
-        sg_update_buffer(this->vertex_buffer, {this->scene.data(), scene_size});
         sg_begin_default_pass(&this->pass_action, width, height);
-        sg_apply_pipeline(this->pipeline);
-        sg_apply_bindings(this->bindings);
-        sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_vs_per_frame, SG_RANGE_REF(this->camera_projection));
-        sg_draw(0, (int) this->scene.size(), 1);
+        sg_apply_pipeline(this->camel_pipeline);
+        sg_apply_bindings(this->camel_bindings);
+        sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_camel_uniforms, SG_RANGE_REF(this->camera_projection));
+        sg_draw(0, (int) this->camel_scene.size(), 1);
+//        sg_end_pass();
+        // Draw the sand
+//        sg_begin_default_pass(&this->pass_action, width, height);
+        sg_apply_pipeline(this->sand_pipeline);
+        sg_apply_bindings(this->sand_bindings);
+        sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_sand_uniforms, SG_RANGE_REF(this->camera_projection));
+        sg_draw(0, (int) this->sand_scene.size(), 1);
+//
         sg_end_pass();
     }
 

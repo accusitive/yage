@@ -24,19 +24,28 @@
 namespace yage {
     class Engine {
     private:
-        b2World world = b2World(b2Vec2(0.0f, -(YAGE_UNIT_SIZE * YAGE_WORLD_SIZE/2.0)));
-        b2Body* ground_body;
+        b2World world = b2World(b2Vec2(0.0f, -(YAGE_UNIT_SIZE * YAGE_WORLD_SIZE / 2.0)));
+        b2Body *ground_body;
         entt::registry registry;
 //        ShaderResourceManager shader_resource_manager;
-        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-YAGE_WORLD_SIZE, YAGE_WORLD_SIZE, -YAGE_WORLD_SIZE, YAGE_WORLD_SIZE, 0.1f, 128.0f);
+ //        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-YAGE_WORLD_SIZE, YAGE_WORLD_SIZE, -YAGE_WORLD_SIZE,
+//                                                            YAGE_WORLD_SIZE, 0.1f, 128.0f);
+        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(0.0f, YAGE_WORLD_SIZE, 0.0f,
+                                                            YAGE_WORLD_SIZE, 0.1f, 128.0f);
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
 
-        sg_pipeline pipeline = {};
-        sg_bindings bindings = {};
+        sg_pipeline camel_pipeline = {};
+        sg_bindings camel_bindings = {};
+        sg_buffer camel_vertex_buffer = {};
 
-        std::vector<float> scene;
-        sg_buffer vertex_buffer = {};
+        sg_pipeline sand_pipeline = {};
+        sg_bindings sand_bindings = {};
+        sg_buffer sand_vertex_buffer = {};
+
+        std::vector<float> camel_scene;
+        std::vector<float> sand_scene;
+
         int frame_count = 0;
         double previous_frametime = 0.0F;
 
@@ -78,7 +87,7 @@ namespace yage {
         static sg_shader create_shader_program();
 
 
-        void RenderQuad(float x, float y, float width, float height);
+        void RenderQuad(float x, float y, float width, float height, bool is_camel);
 
         void RenderDebugQuad(float x, float y, float width, float height);
 
@@ -90,13 +99,15 @@ namespace yage {
 
         void CreatePlayer();
 
-        bool IsPhysicsBodyOnGround(b2Body* physics_body);
+        bool IsPhysicsBodyOnGround(b2Body *physics_body);
 
         void InputHandleHorizontal(float x);
 
         void HandleMovement();
 
         void DebugStick(int32_t stick);
+
+        sg_image_desc CreateTexture(unsigned char *data, unsigned long size);
     };
 
 } // yaga
