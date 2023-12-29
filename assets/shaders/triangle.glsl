@@ -12,7 +12,9 @@ in vec4 color0;
 out vec4 color;
 
 void main() {
-    gl_Position = viewproj * vec4(vec3(position.x, 1.0f - position.y, position.z), 1.0f);
+//    gl_Position = viewproj * vec4(vec3(position.x, 1.0f - position.y, position.z), 1.0f);
+    gl_Position = viewproj * vec4(position, 1.0f);
+
     color = color0;
 }
 @end

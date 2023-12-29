@@ -10,7 +10,7 @@
 #include "engine.hh"
 #include "util.hh"
 #include "../gen/triangle.glsl.h"
-#include "box2d/b2_api.h"
+#include "box2d/box2d.h"
 
 struct ComponentPosition {
     float x;
@@ -18,6 +18,9 @@ struct ComponentPosition {
 };
 struct ComponentSprite {
 
+};
+struct ComponentPhysicsBody {
+    b2Body *body;
 };
 namespace yage {
     std::string Engine::GetWindowTitle() {
@@ -29,6 +32,7 @@ namespace yage {
     Engine::Engine() {
         std::cout << "Engine init" << std::endl;
 //        this->shader_resource_manager.register_builtin_shader_resources();
+
     }
 
     void Engine::SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
@@ -75,16 +79,48 @@ namespace yage {
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(-64.0f, 64.0f);
         for (auto i = 0u; i < 250u; ++i) {
-            float x = dis(gen);
-            float y = dis(gen);
+            auto x = (float) dis(gen);
+            auto y = (float) dis(gen);
+
+            b2BodyDef bodyDef;
+            bodyDef.type = b2_dynamicBody;
+            bodyDef.position.Set(x, y);
+            b2Body *body = world.CreateBody(&bodyDef);
+
+            b2PolygonShape dynamicBox;
+            dynamicBox.SetAsBox(1.56f, 1.56f);
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &dynamicBox;
+            fixtureDef.density = 1.0f;
+            fixtureDef.friction = 0.3f;
+
+            body->CreateFixture(&fixtureDef);
+
             const auto entity = registry.create();
             registry.emplace<ComponentPosition>(entity, x, y);
             registry.emplace<ComponentSprite>(entity);
+            registry.emplace<ComponentPhysicsBody>(entity, body);
+
+
         }
     };
 
+    void Engine::CreateGroundBox() {
+        b2BodyDef ground_body_def;
+        ground_body_def.position.Set(-64.0f, 0.0f);
+        b2Body *ground_body = this->world.CreateBody(&ground_body_def);
+        this->ground_body = ground_body;
+        b2PolygonShape ground_box;
+        ground_box.SetAsBox(128.0f, 10.0f);
+        ground_body->CreateFixture(&ground_box, 0.0f);
+
+
+    }
+
     void Engine::Initialize() {
         this->PopulateWithDebugEntities();
+        this->CreateGroundBox();
         sg_desc sg_setup_desc = {};
         sg_setup_desc.uniform_buffer_size = sizeof(HMM_Mat4);
         sg_setup_desc.logger.func = Engine::SokolLog;
@@ -124,6 +160,8 @@ namespace yage {
         this->frame_count++;
         this->scene.clear();
         auto start = std::chrono::high_resolution_clock::now();
+        this->world.Step(1.0f / 60.0f, 6, 2);
+
         // ImGui Frame setup
         simgui_frame_desc_t frame_desc = {};
         frame_desc.width = width;
@@ -160,11 +198,17 @@ namespace yage {
 
         auto view = this->registry.view<const ComponentSprite, const ComponentPosition>();
         view.each([this](const auto &sprite, ComponentPosition pos) {
-            this->RenderQuad(pos.x, pos.y, 4.0f, 4.0f);
+//            if (pos.x >= -64.0f && pos.x <= 64.0f && pos.y >= -64.0f && pos.y <= 64.0f)
+            this->RenderQuad(pos.x, pos.y, 3.12f, 3.12f);
         });
-        registry.view<ComponentPosition>().each([this](auto entity, auto &pos) {
-            this->registry.patch<ComponentPosition>(entity, [](auto &pos) { pos.x = 0.0f; });
-        });
+        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, 128.0f, 11.56f);
+        registry.view<ComponentPosition, ComponentPhysicsBody>().each(
+                [this](auto entity, ComponentPosition &pos, ComponentPhysicsBody &physics_body) {
+                    this->registry.patch<ComponentPosition>(entity, [physics_body](ComponentPosition &pos) {
+                        pos.x = physics_body.body->GetPosition().x;
+                        pos.y = physics_body.body->GetPosition().y;
+                    });
+                });
         // Update scene data
         ImGui::Text("Vertices: %zu", this->scene.size() / 7);
         auto scene_size = this->scene.size() * sizeof(float);

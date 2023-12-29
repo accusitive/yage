@@ -16,10 +16,13 @@
 #include "../../sokol_imgui.h"
 #include "resource.hh"
 #include "HandmadeMath.h"
+#include "box2d/box2d.h"
 
 namespace yage {
     class Engine {
     private:
+        b2World world = b2World(b2Vec2(0.0f, -10.0f));
+        b2Body* ground_body;
         entt::registry registry;
 //        ShaderResourceManager shader_resource_manager;
         HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-64.0f, 64.0f, -64.0f, 64.0f, 0.1f, 128.0f);
@@ -30,7 +33,7 @@ namespace yage {
         sg_bindings bindings = {};
 
         std::vector<float> scene;
-        sg_buffer vertex_buffer;
+        sg_buffer vertex_buffer = {};
         int frame_count = 0;
         double previous_frametime = 0.0F;
 
@@ -77,6 +80,8 @@ namespace yage {
         void RenderDebugQuad(float x, float y, float width, float height);
 
         void PopulateWithDebugEntities();
+
+        void CreateGroundBox();
     };
 
 } // yaga
