@@ -16,6 +16,8 @@ cmake_policy(SET CMP0072 NEW)
 cmake_policy(SET CMP0079 OLD)
 
 add_subdirectory(entt)
+SET(BOX2D_BUILD_TESTBED OFF)
+add_subdirectory(box2d)
 
 # IMGUI
 add_library(imgui STATIC
@@ -43,6 +45,7 @@ add_library(yage-engine
 # Link libraries
 target_link_libraries(yage-engine EnTT::EnTT)
 target_link_libraries(yage-engine imgui)
+target_link_libraries(yage-engine box2d)
 
 #include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/shaders.cmake)
 #set(SHDC "${CMAKE_SOURCE_DIR}/engine/sokol-tools-bin/bin/linux/sokol-shdc")
@@ -67,6 +70,7 @@ target_include_directories(yage-engine PUBLIC
         #        ${squirrel_SOURCE_DIR}/include
         #        ${squall_SOURCE_DIR}
         #        ${chipmunk_SOURCE_DIR}/include
+        box2d/include
         HandmadeMath/
         ${imgui_SOURCE_DIR}
 )

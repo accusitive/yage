@@ -32,6 +32,7 @@ namespace yage {
         std::vector<float> scene;
         sg_buffer vertex_buffer;
         int frame_count = 0;
+        double previous_frametime = 0.0F;
 
         static void
         SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
@@ -74,6 +75,8 @@ namespace yage {
         void RenderQuad(float x, float y, float width, float height);
 
         void RenderDebugQuad(float x, float y, float width, float height);
+
+        void PopulateWithDebugEntities();
     };
 
 } // yaga

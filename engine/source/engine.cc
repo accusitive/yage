@@ -4,18 +4,21 @@
 
 
 #include <iostream>
+#include <random>
+#include <chrono>
+
 #include "engine.hh"
-
-#ifndef YAGE_SWITCH
-
-#include "../sokol/sokol_log.h"
-
-#endif
-
 #include "util.hh"
-//#include "resource.hh"
 #include "../gen/triangle.glsl.h"
+#include "box2d/b2_api.h"
 
+struct ComponentPosition {
+    float x;
+    float y;
+};
+struct ComponentSprite {
+
+};
 namespace yage {
     std::string Engine::GetWindowTitle() {
         return "Yage Game Engine (this is written in code shared by PC and Switch!)";
@@ -67,7 +70,21 @@ namespace yage {
         this->scene.insert(this->scene.end(), vertices, vertices + (num_verts * vert_size));
     }
 
+    void Engine::PopulateWithDebugEntities() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(-64.0f, 64.0f);
+        for (auto i = 0u; i < 250u; ++i) {
+            float x = dis(gen);
+            float y = dis(gen);
+            const auto entity = registry.create();
+            registry.emplace<ComponentPosition>(entity, x, y);
+            registry.emplace<ComponentSprite>(entity);
+        }
+    };
+
     void Engine::Initialize() {
+        this->PopulateWithDebugEntities();
         sg_desc sg_setup_desc = {};
         sg_setup_desc.uniform_buffer_size = sizeof(HMM_Mat4);
         sg_setup_desc.logger.func = Engine::SokolLog;
@@ -85,7 +102,7 @@ namespace yage {
 
         sg_buffer_desc buffer_desc = {};
         buffer_desc.usage = SG_USAGE_STREAM;
-        buffer_desc.size = (6 * 100) * sizeof(float); // BUFFERSIZE. In theory enough to support 100 quads
+        buffer_desc.size = (32768) * sizeof(float); // BUFFERSIZE
         sg_buffer vbx = sg_make_buffer(buffer_desc);
         this->bindings.vertex_buffers[0] = vbx;
 
@@ -106,6 +123,7 @@ namespace yage {
     void Engine::Render(int width, int height) {
         this->frame_count++;
         this->scene.clear();
+        auto start = std::chrono::high_resolution_clock::now();
         // ImGui Frame setup
         simgui_frame_desc_t frame_desc = {};
         frame_desc.width = width;
@@ -119,6 +137,7 @@ namespace yage {
 
         // Begin frame render
         ImGui::Begin("Yet Another Game Engine", nullptr, ImGuiWindowFlags_None);
+        ImGui::Text("Previous frame time: %f", this->previous_frametime);
         ImGui::Text("Frame count: %i", this->frame_count);
         ImGui::Text("Platform: %s", getBuild());
         this->RenderScene(width, height);
@@ -130,14 +149,22 @@ namespace yage {
         sg_end_pass();
 
         sg_commit();
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = end - start;
+        double frame_time = elapsed.count();
+        this->previous_frametime = frame_time;
     }
 
     void Engine::RenderScene(int width, int height) {
-        RenderDebugQuad(64.0f, 64.0f, 24.0f, 24.0f);
+//        RenderDebugQuad(64.0f, 64.0f, 24.0f, 24.0f);
 
-        RenderQuad(-32.0f, -32.0f, 4.0f, 4.0f);
-        RenderQuad(-36.0f, -32.0f, 4.0f, 4.0f);
-
+        auto view = this->registry.view<const ComponentSprite, const ComponentPosition>();
+        view.each([this](const auto &sprite, ComponentPosition pos) {
+            this->RenderQuad(pos.x, pos.y, 4.0f, 4.0f);
+        });
+        registry.view<ComponentPosition>().each([this](auto entity, auto &pos) {
+            this->registry.patch<ComponentPosition>(entity, [](auto &pos) { pos.x = 0.0f; });
+        });
         // Update scene data
         ImGui::Text("Vertices: %zu", this->scene.size() / 7);
         auto scene_size = this->scene.size() * sizeof(float);
