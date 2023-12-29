@@ -14,18 +14,21 @@
 
 #include "imgui.h"
 #include "../../sokol_imgui.h"
-#include "resource.hh"
 #include "HandmadeMath.h"
 #include "box2d/box2d.h"
+
+#define YAGE_WORLD_SIZE 64.0f
+#define YAGE_UNIT_SIZE (1/YAGE_WORLD_SIZE * 100.0f)
+#define YAGE_NUMBER_DEBUG_ENTITIES 8u
 
 namespace yage {
     class Engine {
     private:
-        b2World world = b2World(b2Vec2(0.0f, -10.0f));
+        b2World world = b2World(b2Vec2(0.0f, -(YAGE_UNIT_SIZE * YAGE_WORLD_SIZE/2.0)));
         b2Body* ground_body;
         entt::registry registry;
 //        ShaderResourceManager shader_resource_manager;
-        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-64.0f, 64.0f, -64.0f, 64.0f, 0.1f, 128.0f);
+        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-YAGE_WORLD_SIZE, YAGE_WORLD_SIZE, -YAGE_WORLD_SIZE, YAGE_WORLD_SIZE, 0.1f, 128.0f);
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
 
@@ -82,6 +85,14 @@ namespace yage {
         void PopulateWithDebugEntities();
 
         void CreateGroundBox();
+
+        void TempHandleJump();
+
+        void CreatePlayer();
+
+        bool IsPhysicsBodyOnGround(b2Body* physics_body);
+
+        void HandleMovement(float x);
     };
 
 } // yaga

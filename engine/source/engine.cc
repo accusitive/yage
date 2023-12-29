@@ -11,17 +11,8 @@
 #include "util.hh"
 #include "../gen/triangle.glsl.h"
 #include "box2d/box2d.h"
+#include "components.hh"
 
-struct ComponentPosition {
-    float x;
-    float y;
-};
-struct ComponentSprite {
-
-};
-struct ComponentPhysicsBody {
-    b2Body *body;
-};
 namespace yage {
     std::string Engine::GetWindowTitle() {
         return "Yage Game Engine (this is written in code shared by PC and Switch!)";
@@ -77,10 +68,12 @@ namespace yage {
     void Engine::PopulateWithDebugEntities() {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(-64.0f, 64.0f);
-        for (auto i = 0u; i < 250u; ++i) {
+        std::uniform_real_distribution<> dis(-YAGE_WORLD_SIZE, YAGE_WORLD_SIZE);
+        for (auto i = 0u; i < YAGE_NUMBER_DEBUG_ENTITIES; ++i) {
             auto x = (float) dis(gen);
             auto y = (float) dis(gen);
+            y = y + YAGE_WORLD_SIZE;
+            y /= 2.0f;
 
             b2BodyDef bodyDef;
             bodyDef.type = b2_dynamicBody;
@@ -88,7 +81,7 @@ namespace yage {
             b2Body *body = world.CreateBody(&bodyDef);
 
             b2PolygonShape dynamicBox;
-            dynamicBox.SetAsBox(1.56f, 1.56f);
+            dynamicBox.SetAsBox(YAGE_UNIT_SIZE, YAGE_UNIT_SIZE);
 
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &dynamicBox;
@@ -97,7 +90,7 @@ namespace yage {
 
             body->CreateFixture(&fixtureDef);
 
-            const auto entity = registry.create();
+            const auto entity = this->registry.create();
             registry.emplace<ComponentPosition>(entity, x, y);
             registry.emplace<ComponentSprite>(entity);
             registry.emplace<ComponentPhysicsBody>(entity, body);
@@ -106,13 +99,43 @@ namespace yage {
         }
     };
 
+    void Engine::CreatePlayer() {
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_dynamicBody;
+        bodyDef.position.Set(0.0f, 0.0f);
+        b2Body *body = world.CreateBody(&bodyDef);
+
+        b2PolygonShape dynamicBox;
+        dynamicBox.SetAsBox(YAGE_UNIT_SIZE, YAGE_UNIT_SIZE);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &dynamicBox;
+        fixtureDef.density = 1.0f;
+        fixtureDef.friction = 0.3f;
+
+        body->CreateFixture(&fixtureDef);
+
+        const auto entity = this->registry.create();
+        registry.emplace<ComponentPosition>(entity, 0.0f, 0.0f);
+        registry.emplace<ComponentSprite>(entity);
+        registry.emplace<ComponentPhysicsBody>(entity, body);
+        registry.emplace<ComponentPlayer>(entity);
+        registry.emplace<ComponentPlayerInput>(entity);
+//        registry.emplace<ComponentMovement>(entity, ComponentMovement {
+//            .move_speed = 1.0f,
+//            .jump_height = 2.0f,
+//        });
+
+
+    }
+
     void Engine::CreateGroundBox() {
         b2BodyDef ground_body_def;
-        ground_body_def.position.Set(-64.0f, 0.0f);
+        ground_body_def.position.Set(-YAGE_WORLD_SIZE, 0.0f);
         b2Body *ground_body = this->world.CreateBody(&ground_body_def);
         this->ground_body = ground_body;
         b2PolygonShape ground_box;
-        ground_box.SetAsBox(128.0f, 10.0f);
+        ground_box.SetAsBox(YAGE_WORLD_SIZE * 2.0f, 10.0f);
         ground_body->CreateFixture(&ground_box, 0.0f);
 
 
@@ -120,6 +143,7 @@ namespace yage {
 
     void Engine::Initialize() {
         this->PopulateWithDebugEntities();
+        this->CreatePlayer();
         this->CreateGroundBox();
         sg_desc sg_setup_desc = {};
         sg_setup_desc.uniform_buffer_size = sizeof(HMM_Mat4);
@@ -174,7 +198,7 @@ namespace yage {
         ImGui::SetNextWindowSize((ImVec2) {400, 100}, ImGuiCond_Once);
 
         // Begin frame render
-        ImGui::Begin("Yet Another Game Engine", nullptr, ImGuiWindowFlags_None);
+        ImGui::Begin("Yet Another Game Engine", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("Previous frame time: %f", this->previous_frametime);
         ImGui::Text("Frame count: %i", this->frame_count);
         ImGui::Text("Platform: %s", getBuild());
@@ -182,6 +206,7 @@ namespace yage {
 
         // End frame render
         ImGui::End();
+
         sg_begin_default_pass(&this->imgui_pass_action, width, height);
         simgui_render();
         sg_end_pass();
@@ -196,12 +221,12 @@ namespace yage {
     void Engine::RenderScene(int width, int height) {
 //        RenderDebugQuad(64.0f, 64.0f, 24.0f, 24.0f);
 
-        auto view = this->registry.view<const ComponentSprite, const ComponentPosition>();
-        view.each([this](const auto &sprite, ComponentPosition pos) {
-//            if (pos.x >= -64.0f && pos.x <= 64.0f && pos.y >= -64.0f && pos.y <= 64.0f)
-            this->RenderQuad(pos.x, pos.y, 3.12f, 3.12f);
-        });
-        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, 128.0f, 11.56f);
+        this->registry.view<const ComponentSprite, const ComponentPosition>().each(
+                [this](const auto &sprite, ComponentPosition pos) {
+                    this->RenderQuad(pos.x, pos.y, YAGE_UNIT_SIZE * 2.0f, YAGE_UNIT_SIZE * 2.0f);
+                });
+        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, YAGE_WORLD_SIZE * 2.0f,
+                         11.56f);
         registry.view<ComponentPosition, ComponentPhysicsBody>().each(
                 [this](auto entity, ComponentPosition &pos, ComponentPhysicsBody &physics_body) {
                     this->registry.patch<ComponentPosition>(entity, [physics_body](ComponentPosition &pos) {
@@ -229,6 +254,29 @@ namespace yage {
 
     void Engine::MouseButtonCallback(int button, int action, int mods) {
         simgui_add_mouse_button_event(button, action);
+    }
+
+    bool Engine::IsPhysicsBodyOnGround(b2Body *physics_body) {
+        auto contact = physics_body->GetContactList();
+        while (contact != nullptr) {
+            if (contact->other == this->ground_body) {
+                return true;
+            }
+            contact = contact->next;
+        }
+        return false;
+    }
+
+    void Engine::TempHandleJump() {
+        this->registry.view<const ComponentPlayerInput, const ComponentPhysicsBody>().each(
+                [this](auto& player_input, auto& physics_body) {
+                    if (this->IsPhysicsBodyOnGround(physics_body.body))
+//                        physics_body.body->ApplyLinearImpulseToCenter(b2Vec2(0.0f, YAGE_UNIT_SIZE * 100.0f), true);
+                        physics_body.body->SetLinearVelocity(b2Vec2(0.0f, YAGE_UNIT_SIZE * 10.0f));
+                });
+    }
+    void Engine::HandleMovement(float x) {
+
     }
 //#endif
 } // yaga

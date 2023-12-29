@@ -20,5 +20,4 @@ include(SwitchTools)
 # Find libnx, which is required by our application.
 find_package(Libnx REQUIRED)
 
-
 add_subdirectory(templates)

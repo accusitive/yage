@@ -3,6 +3,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 # First, we want to add the regular ELF target.
 add_executable(yage_app source/switch_main.cc)
+add_compile_definitions(YAGE_SWITCH)
 
 # Next, we need to set the required target properties
 # so CMake can detect the metadata for the application.

@@ -217,6 +217,9 @@ int main(int argc, char* argv[])
         if (kDown & HidNpadButton_Plus)
             break;
 
+        if(kDown & HidNpadButton_B) {
+            e->TempHandleJump();
+        }
         e->Render(1280, 720);
 
         eglSwapBuffers(s_display, s_surface);

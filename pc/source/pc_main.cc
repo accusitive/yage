@@ -15,6 +15,25 @@ void CursorPosCallback(GLFWwindow *window, double xpos, double ypos) {
 void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
     yage::Engine::MouseButtonCallback(button, action, mods);
 }
+void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if(key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        yage::Engine::GetEngine().TempHandleJump();
+    }
+
+}
+float GetMovementAxis(GLFWwindow* window) {
+    auto a = glfwGetKey(window, GLFW_KEY_A);
+    auto d = glfwGetKey(window, GLFW_KEY_D);
+
+    if(a && !d) {
+        return -1.0f;
+    } else if(!a && d) {
+        return 1.0f;
+    } else {
+        return 0.0f;
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     glfwInit();
@@ -25,7 +44,7 @@ int main(int argc, char *argv[]) {
     GLFWwindow *window = glfwCreateWindow(640, 480, yage::Engine::GetWindowTitle().c_str(), 0, 0);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
-//    glfwSetKeyCallback(window, KeyCallback);
+    glfwSetKeyCallback(window, KeyCallback);
     glfwSetCursorPosCallback(window, CursorPosCallback);
     glfwSetMouseButtonCallback(window, MouseButtonCallback);
     std::cout << "Engine init" << std::endl;
@@ -36,6 +55,7 @@ int main(int argc, char *argv[]) {
     while (!glfwWindowShouldClose(window)) {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
+        e->HandleMovement(GetMovementAxis(window));
         e->Render(width, height);
         glfwSwapBuffers(window);
         glfwPollEvents();

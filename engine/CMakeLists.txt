@@ -38,8 +38,7 @@ add_library(yage-engine
         source/util.hh
         source/engine.cc
         source/engine.hh
-        source/resource.cc
-        source/resource.hh
+        source/components.hh
 )
 
 # Link libraries
