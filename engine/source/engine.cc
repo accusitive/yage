@@ -12,6 +12,11 @@
 #include "../gen/triangle.glsl.h"
 #include "box2d/box2d.h"
 #include "components.hh"
+#include "../gen/camel.png.h"
+
+int decodePNG(std::vector<unsigned char> &out_image, unsigned long &image_width, unsigned long &image_height,
+              const unsigned char *in_png, size_t in_size, bool convert_to_rgba32 = true);
+
 
 namespace yage {
     std::string Engine::GetWindowTitle() {
@@ -32,36 +37,20 @@ namespace yage {
                   << '@' << std::endl;
     }
 
-    void Engine::RenderDebugQuad(float x, float y, float width, float height) {
-        float z = 0.0f;
-        float h = 64.0f;
-        float vertices[] = {
-                z, z, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // top left
-                h, z, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // top right
-                z, h, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left
-
-                z, h, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-                h, h, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
-                h, z, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // top right
-        };
-        const int num_verts = 6;
-        const int vert_size = 7;
-        this->scene.insert(this->scene.end(), vertices, vertices + (num_verts * vert_size));
-    }
 
     void Engine::RenderQuad(float x, float y, float width, float height) {
         float vertices[] = {
-                x, y, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // top left
-                x + width, y, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // top right
-                x, y + height, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left
+                x, y,                   0.0f, 0.0f, // top left
+                x + width, y,           1.0f, 0.0f, // top right
+                x, y + height,          0.0f, 1.0f, // bottom left
 
-                x, y + height, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-                x + width, y + height, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
-                x + width, y, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // top right
+                x, y + height,          0.0f, 1.0f, // bottom left
+                x + width, y + height,  1.0f, 1.0f, // bottom right
+                x + width, y,           1.0f, 0.0f, // top right
         };
 
         const int num_verts = 6;
-        const int vert_size = 7;
+        const int vert_size = 4;
         this->scene.insert(this->scene.end(), vertices, vertices + (num_verts * vert_size));
     }
 
@@ -111,7 +100,7 @@ namespace yage {
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &dynamicBox;
         fixtureDef.density = 1.0f;
-        fixtureDef.friction = 0.3f;
+        fixtureDef.friction = 1.f;
 
         body->CreateFixture(&fixtureDef);
 
@@ -156,14 +145,35 @@ namespace yage {
         sg_shader shd = sg_make_shader(triangle_shader_desc(sg_query_backend()));
         sg_pipeline_desc pipeline_desc = {};
         pipeline_desc.shader = shd;
-        pipeline_desc.layout.attrs[ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT3;
-        pipeline_desc.layout.attrs[ATTR_vs_color0].format = SG_VERTEXFORMAT_FLOAT4;
+        pipeline_desc.layout.attrs[ATTR_vs_position].format = SG_VERTEXFORMAT_FLOAT2;
+        pipeline_desc.layout.attrs[ATTR_vs_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
 
         sg_buffer_desc buffer_desc = {};
         buffer_desc.usage = SG_USAGE_STREAM;
         buffer_desc.size = (32768) * sizeof(float); // BUFFERSIZE
         sg_buffer vbx = sg_make_buffer(buffer_desc);
+
+        std::vector<unsigned char> camel_pixels;
+        auto t = &camel_pixels;
+        unsigned long w;
+        unsigned long h;
+        decodePNG(*t, w, h, assets_textures_camel_png, assets_textures_camel_png_len, true);
+
+        sg_image_data camel_image_data = {};
+        camel_image_data.subimage[0][0] = sg_range(camel_pixels.data(), camel_pixels.size());
+
+        sg_image_desc camel_image_desc = {};
+        camel_image_desc.data = camel_image_data;
+        camel_image_desc.width = 64;
+        camel_image_desc.height = 64;
+        camel_image_desc.label = "camel-texture";
+
+        sg_sampler_desc camel_sampler_desc = {};
+        camel_sampler_desc.label = "camel-sampler";
+
         this->bindings.vertex_buffers[0] = vbx;
+        this->bindings.fs.images[SLOT_tex] = sg_make_image(camel_image_desc);
+        this->bindings.fs.samplers[SLOT_smp] = sg_make_sampler(camel_sampler_desc);
 
         this->pipeline = sg_make_pipeline(pipeline_desc);
 
@@ -197,10 +207,9 @@ namespace yage {
         ImGui::SetNextWindowSize((ImVec2) {400, 100}, ImGuiCond_Once);
 
         // Begin frame render
-        ImGui::Begin("Yet Another Game Engine", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::Text("Previous: %f", this->previous_frametime);
-        ImGui::Text("Frame count: %i", this->frame_count);
+        ImGui::Begin("Camel Water Simulator on Y.A.G.E", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("Platform: %s", getBuild());
+
 
         this->HandleMovement();
         this->world.Step(1.0f / 60.0f, 6, 2);
@@ -237,9 +246,15 @@ namespace yage {
                     });
                 });
         // Update scene data
-        ImGui::Text("Vertices: %zu", this->scene.size() / 7);
+
         auto scene_size = this->scene.size() * sizeof(float);
-        ImGui::Text("scene_size: %lu bytes", scene_size);
+
+        if(ImGui::TreeNodeEx("Rendering Info"), ImGuiTreeNodeFlags_DefaultOpen) {
+            ImGui::Text("Frame count: %i", this->frame_count);
+            ImGui::Text("Vertices: %zu", this->scene.size() / 4);
+            ImGui::Text("Scene size: %lu bytes", scene_size);
+            ImGui::Text("Previous: %f", this->previous_frametime);
+        }
 
         sg_update_buffer(this->vertex_buffer, {this->scene.data(), scene_size});
         sg_begin_default_pass(&this->pass_action, width, height);

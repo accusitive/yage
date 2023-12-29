@@ -39,6 +39,7 @@ add_library(yage-engine
         source/engine.cc
         source/engine.hh
         source/components.hh
+        picoPNG/picopng.cpp
 )
 
 # Link libraries
