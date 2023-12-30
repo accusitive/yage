@@ -125,8 +125,8 @@ namespace yage {
 
     }
 
-#define YAGE_WORLD_GROUNDBOX_WIDTH YAGE_WORLD_SIZE * 2.0f
-#define YAGE_GROUND_BODY_HEIGHT YAGE_UNIT_SIZE * 20.0f
+#define YAGE_WORLD_GROUNDBOX_WIDTH (YAGE_WORLD_SIZE * 1024.0f)
+#define YAGE_GROUND_BODY_HEIGHT (YAGE_UNIT_SIZE * 20.0f)
 
     void Engine::CreateGroundBox() {
         b2BodyDef ground_body_def;
@@ -264,7 +264,7 @@ namespace yage {
                 [this](const auto &sprite, ComponentPosition pos) {
                     this->RenderQuad(pos.x, pos.y, YAGE_UNIT_SIZE, YAGE_UNIT_SIZE, true);
                 });
-        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, YAGE_WORLD_SIZE,
+        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, YAGE_WORLD_GROUNDBOX_WIDTH,
                          (YAGE_GROUND_BODY_HEIGHT + YAGE_UNIT_SIZE) / 2.0f, false);
         registry.view<ComponentPosition, ComponentPhysicsBody>().each(
                 [this](auto entity, ComponentPosition &pos, ComponentPhysicsBody &physics_body) {
@@ -273,15 +273,26 @@ namespace yage {
                         pos.y = physics_body.body->GetPosition().y;
                     });
                 });
-//        this->registry.view<const ComponentPlayer, const ComponentPosition>().each(
-//                [this](const auto &player, const auto &pos) {
-//                    auto hx = pos.x / YAGE_UNIT_SIZE;
-//                    auto hy = pos.y / YAGE_UNIT_SIZE;
-//
-//                    this->camera_projection = HMM_Orthographic_LH_NO(0.0f + hx, YAGE_WORLD_SIZE + hx,
-//                                                                     0.0f + hy,
-//                                                                     YAGE_WORLD_SIZE + hy, 0.1f, 128.0f);
-//                });
+        this->registry.view<const ComponentPlayer, const ComponentPosition>().each(
+                [this, width, height](const auto &player, const auto &pos) {
+
+                    auto v3 = HMM_Vec3();
+                    v3.X = (0.0f-pos.x) + (YAGE_WORLD_SIZE + YAGE_UNIT_SIZE )/2;
+//                    v3.Y = pos.y;
+                    v3.Y = 1.0;
+                    v3.Z = 1.0f;
+
+                    auto view = HMM_Translate(HMM_Vec3(v3));
+
+                    this->camera_projection = HMM_Orthographic_LH_NO(
+                            0.0, // left
+                            YAGE_WORLD_SIZE, //right
+                            0.0, // bottom
+                            YAGE_WORLD_SIZE, // top
+                            0.1f,
+                            128.0f
+                    ) * view;
+                });
 
         // Update scene data
 
@@ -351,7 +362,7 @@ namespace yage {
                         this->registry.patch<ComponentPlayerInput>(entity, [](ComponentPlayerInput &player_input) {
                             player_input.should_jump = false;
                         });
-                        physics_body.body->SetLinearVelocity(b2Vec2(0.0f, player_input.jump_height));
+                        physics_body.body->SetLinearVelocity(b2Vec2(physics_body.body->GetLinearVelocity().x, player_input.jump_height));
 
                     }
                     if (player_input.horizontal != 0.0f) {

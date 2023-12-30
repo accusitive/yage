@@ -24,14 +24,13 @@
 namespace yage {
     class Engine {
     private:
-        b2World world = b2World(b2Vec2(0.0f, -(YAGE_UNIT_SIZE * YAGE_WORLD_SIZE / 2.0)));
+        b2World world = b2World(b2Vec2(0.0f, -20.0f));
         b2Body *ground_body;
         entt::registry registry;
 //        ShaderResourceManager shader_resource_manager;
  //        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(-YAGE_WORLD_SIZE, YAGE_WORLD_SIZE, -YAGE_WORLD_SIZE,
 //                                                            YAGE_WORLD_SIZE, 0.1f, 128.0f);
-        HMM_Mat4 camera_projection = HMM_Orthographic_LH_NO(0.0f, YAGE_WORLD_SIZE, 0.0f,
-                                                            YAGE_WORLD_SIZE, 0.1f, 128.0f);
+        HMM_Mat4 camera_projection = {};
         sg_pass_action pass_action = {};
         sg_pass_action imgui_pass_action = {};
 

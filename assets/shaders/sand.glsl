@@ -30,7 +30,7 @@ float rand(vec2 co){
 }
 
 void main() {
-    frag_color = texture(sampler2D(tex,smp), vec2(rand(uv), 1.0f - rand(uv)));
+    frag_color = texture(sampler2D(tex,smp), vec2(rand(uv), rand(uv)));
 }
 #pragma sokol @end
 #pragma sokol @program sand sand_vs sand_fs

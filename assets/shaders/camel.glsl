@@ -25,12 +25,9 @@ layout(set = 0, binding = 2) uniform sampler smp;
 
 in vec2 uv;
 out vec4 frag_color;
-float rand(vec2 co){
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
-}
 
 void main() {
-    frag_color = texture(sampler2D(tex,smp), vec2(uv.s, 1.0f - uv.t));
+    frag_color = texture(sampler2D(tex,smp), vec2(uv.s, 1.0f-uv.t));
 }
 #pragma sokol @end
 #pragma sokol @program camel camel_vs camel_fs
