@@ -12,8 +12,7 @@
 #include "box2d/box2d.h"
 #include "components.hh"
 #include "../gen/camel.png.h"
-#include "../gen/camel.glsl.h"
-#include "../gen/sand.glsl.h"
+#include "renderpass.hh"
 
 int decodePNG(std::vector<unsigned char> &out_image, unsigned long &image_width, unsigned long &image_height,
               const unsigned char *in_png, size_t in_size, bool convert_to_rgba32 = true);
@@ -27,7 +26,13 @@ namespace yage {
     Engine::~Engine() = default;
 
     Engine::Engine() {
+        sg_desc sg_setup_desc = {};
+        sg_setup_desc.uniform_buffer_size = sizeof(HMM_Mat4);
+        sg_setup_desc.logger.func = Engine::SokolLog;
+        sg_setup(sg_setup_desc);
         std::cout << "Engine init" << std::endl;
+        this->camel_pass = CamelRenderPass(this->CreateTexture(assets_textures_camel_png, assets_textures_camel_png_len));
+        this->sand_pass = SandRenderPass(this->CreateTexture(assets_textures_camel_png, assets_textures_camel_png_len));
     }
 
     void Engine::SokolLog(const char *tag, uint32_t log_level, uint32_t log_item, const char *message, uint32_t line_nr,
@@ -51,10 +56,9 @@ namespace yage {
         const int num_verts = 6;
         const int vert_size = 4;
         if (is_camel) {
-            this->camel_scene.insert(this->camel_scene.end(), vertices, vertices + (num_verts * vert_size));
-
+            this->camel_pass.scene.insert(this->camel_pass.scene.end(), vertices, vertices + (num_verts * vert_size));
         } else {
-            this->sand_scene.insert(this->sand_scene.end(), vertices, vertices + (num_verts * vert_size));
+            this->sand_pass.scene.insert(this->sand_pass.scene.end(), vertices, vertices + (num_verts * vert_size));
 
         }
 
@@ -119,7 +123,7 @@ namespace yage {
         registry.emplace<ComponentPlayer>(entity);
         registry.emplace<ComponentPlayerInput>(entity, ComponentPlayerInput{
                 .move_speed = 10.0f,
-                .jump_height = 25.0f,
+                .jump_height = 10.0f,
         });
 
 
@@ -129,15 +133,16 @@ namespace yage {
 #define YAGE_GROUND_BODY_HEIGHT (YAGE_UNIT_SIZE * 20.0f)
 
     void Engine::CreateGroundBox() {
-        b2BodyDef ground_body_def;
-        ground_body_def.position.Set(0.0f, 0.0f);
-        b2Body *ground_body = this->world.CreateBody(&ground_body_def);
-        this->ground_body = ground_body;
-        b2PolygonShape ground_box;
-        ground_box.SetAsBox(YAGE_WORLD_GROUNDBOX_WIDTH / 2.0f, YAGE_GROUND_BODY_HEIGHT / 2.0f);
-        ground_body->CreateFixture(&ground_box, 0.0f);
-
-
+        float offset = YAGE_WORLD_GROUNDBOX_WIDTH / 2.0f;
+        for (int i = -32; i < 32; i++) {
+            b2BodyDef ground_body_def;
+            ground_body_def.position.Set((float) i * offset, 0.0f);
+            b2Body *ground_body = this->world.CreateBody(&ground_body_def);
+            this->ground_bodies.push_back(ground_body);
+            b2PolygonShape ground_box;
+            ground_box.SetAsBox(YAGE_WORLD_GROUNDBOX_WIDTH / 2.0f, YAGE_GROUND_BODY_HEIGHT / 2.0f);
+            ground_body->CreateFixture(&ground_box, 0.0f);
+        }
     }
 
     sg_image_desc Engine::CreateTexture(unsigned char *data, unsigned long size) {
@@ -163,47 +168,11 @@ namespace yage {
         this->PopulateWithDebugEntities();
         this->CreatePlayer();
         this->CreateGroundBox();
-        sg_desc sg_setup_desc = {};
-        sg_setup_desc.uniform_buffer_size = sizeof(HMM_Mat4);
-        sg_setup_desc.logger.func = Engine::SokolLog;
-        sg_setup(sg_setup_desc);
+
 
         ImGui::CreateContext();
         simgui_desc_t desc = {};
         simgui_setup(desc);
-
-        sg_shader shd = sg_make_shader(camel_shader_desc(sg_query_backend()));
-        sg_pipeline_desc pipeline_desc = {};
-        pipeline_desc.shader = shd;
-        // Same for camel and sand
-        pipeline_desc.layout.attrs[ATTR_camel_vs_position].format = SG_VERTEXFORMAT_FLOAT2;
-        pipeline_desc.layout.attrs[ATTR_camel_vs_texcoord].format = SG_VERTEXFORMAT_FLOAT2;
-
-        sg_buffer_desc buffer_desc = {};
-        buffer_desc.usage = SG_USAGE_STREAM;
-        buffer_desc.size = (32768) * sizeof(float); // BUFFERSIZE
-        this->camel_vertex_buffer = sg_make_buffer(buffer_desc);
-        this->sand_vertex_buffer = sg_make_buffer(buffer_desc);
-
-        sg_sampler_desc camel_sampler_desc = {};
-        camel_sampler_desc.label = "camel-sampler";
-        sg_image_desc camel_image_desc = this->CreateTexture(assets_textures_camel_png, assets_textures_camel_png_len);
-
-        this->camel_bindings.vertex_buffers[0] = this->camel_vertex_buffer;
-        this->camel_bindings.fs.images[SLOT_tex] = sg_make_image(camel_image_desc);
-        this->camel_bindings.fs.samplers[SLOT_smp] = sg_make_sampler(camel_sampler_desc);
-        this->camel_pipeline = sg_make_pipeline(pipeline_desc);
-
-        sg_sampler_desc sand_sampler_desc = {};
-        sand_sampler_desc.label = "camel-sampler";
-//        sg_image_desc sand_image_desc = this->CreateTexture(assets_textures_camel_png, assets_textures_camel_png_len);
-
-        pipeline_desc.shader = sg_make_shader(sand_shader_desc(sg_query_backend()));
-        this->sand_bindings.vertex_buffers[0] = this->sand_vertex_buffer;
-        this->sand_bindings.fs.images[SLOT_tex] = this->camel_bindings.fs.images[SLOT_tex];
-        this->sand_bindings.fs.samplers[SLOT_smp] = sg_make_sampler(sand_sampler_desc);
-        this->sand_pipeline = sg_make_pipeline(pipeline_desc);
-
 
         this->pass_action = {};
         this->pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
@@ -218,8 +187,10 @@ namespace yage {
 
     void Engine::Render(int width, int height) {
         this->frame_count++;
-        this->camel_scene.clear();
-        this->sand_scene.clear();
+
+        this->camel_pass.begin_frame();
+        this->sand_pass.begin_frame();
+
         auto start = std::chrono::high_resolution_clock::now();
 
 
@@ -264,8 +235,13 @@ namespace yage {
                 [this](const auto &sprite, ComponentPosition pos) {
                     this->RenderQuad(pos.x, pos.y, YAGE_UNIT_SIZE, YAGE_UNIT_SIZE, true);
                 });
-        this->RenderQuad(this->ground_body->GetPosition().x, this->ground_body->GetPosition().y, YAGE_WORLD_GROUNDBOX_WIDTH,
-                         (YAGE_GROUND_BODY_HEIGHT + YAGE_UNIT_SIZE) / 2.0f, false);
+        for (auto ground_body: this->ground_bodies) {
+            this->RenderQuad(ground_body->GetPosition().x, ground_body->GetPosition().y,
+                             YAGE_WORLD_GROUNDBOX_WIDTH,
+                             (YAGE_GROUND_BODY_HEIGHT + YAGE_UNIT_SIZE) / 2.0f, false);
+        }
+
+
         registry.view<ComponentPosition, ComponentPhysicsBody>().each(
                 [this](auto entity, ComponentPosition &pos, ComponentPhysicsBody &physics_body) {
                     this->registry.patch<ComponentPosition>(entity, [physics_body](ComponentPosition &pos) {
@@ -277,7 +253,7 @@ namespace yage {
                 [this, width, height](const auto &player, const auto &pos) {
 
                     auto v3 = HMM_Vec3();
-                    v3.X = (0.0f-pos.x) + (YAGE_WORLD_SIZE + YAGE_UNIT_SIZE )/2;
+                    v3.X = (0.0f - pos.x) + (YAGE_WORLD_SIZE + YAGE_UNIT_SIZE) / 2;
 //                    v3.Y = pos.y;
                     v3.Y = 1.0;
                     v3.Z = 1.0f;
@@ -296,35 +272,25 @@ namespace yage {
 
         // Update scene data
 
-        auto camel_scene_size = this->camel_scene.size() * sizeof(float);
-        auto sand_scene_size = this->sand_scene.size() * sizeof(float);
+        auto camel_scene_size = this->camel_pass.scene.size() * sizeof(float);
+        auto sand_scene_size = this->sand_pass.scene.size() * sizeof(float);
 
         if (ImGui::TreeNodeEx("Rendering Info"), ImGuiTreeNodeFlags_DefaultOpen) {
             ImGui::Text("Frame count: %i", this->frame_count);
-            ImGui::Text("Camel Vertices: %zu", this->camel_scene.size() / 4);
-            ImGui::Text("Sand Vertices: %zu", this->sand_scene.size() / 4);
+            ImGui::Text("Camel Vertices: %zu", this->camel_pass.get_scene_size() / 4);
+            ImGui::Text("Sand Vertices: %zu", this->sand_pass.get_scene_size() / 4);
 
             ImGui::Text("Camel Scene size: %lu bytes", camel_scene_size);
             ImGui::Text("Sand Scene size: %lu bytes", sand_scene_size);
             ImGui::Text("Previous: %f", this->previous_frametime);
         }
         // Draw the camels
-        sg_update_buffer(this->camel_vertex_buffer, {this->camel_scene.data(), camel_scene_size});
-        sg_update_buffer(this->sand_vertex_buffer, {this->sand_scene.data(), sand_scene_size});
+        this->camel_pass.update_buffers();
+        this->sand_pass.update_buffers();
 
         sg_begin_default_pass(&this->pass_action, width, height);
-        sg_apply_pipeline(this->camel_pipeline);
-        sg_apply_bindings(this->camel_bindings);
-        sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_camel_uniforms, SG_RANGE_REF(this->camera_projection));
-        sg_draw(0, (int) this->camel_scene.size(), 1);
-//        sg_end_pass();
-        // Draw the sand
-//        sg_begin_default_pass(&this->pass_action, width, height);
-        sg_apply_pipeline(this->sand_pipeline);
-        sg_apply_bindings(this->sand_bindings);
-        sg_apply_uniforms(SG_SHADERSTAGE_VS, SLOT_sand_uniforms, SG_RANGE_REF(this->camera_projection));
-        sg_draw(0, (int) this->sand_scene.size(), 1);
-//
+        this->camel_pass.draw(SG_RANGE_REF(this->camera_projection));
+        this->sand_pass.draw(SG_RANGE_REF(this->camera_projection));
         sg_end_pass();
     }
 
@@ -339,8 +305,10 @@ namespace yage {
     bool Engine::IsPhysicsBodyOnGround(b2Body *physics_body) {
         auto contact = physics_body->GetContactList();
         while (contact != nullptr) {
-            if (contact->other == this->ground_body) {
-                return true;
+            for (auto ground_body: this->ground_bodies) {
+                if (contact->other == ground_body) {
+                    return true;
+                }
             }
             contact = contact->next;
         }
@@ -362,7 +330,8 @@ namespace yage {
                         this->registry.patch<ComponentPlayerInput>(entity, [](ComponentPlayerInput &player_input) {
                             player_input.should_jump = false;
                         });
-                        physics_body.body->SetLinearVelocity(b2Vec2(physics_body.body->GetLinearVelocity().x, player_input.jump_height));
+                        physics_body.body->SetLinearVelocity(
+                                b2Vec2(physics_body.body->GetLinearVelocity().x / 2.0f, player_input.jump_height));
 
                     }
                     if (player_input.horizontal != 0.0f) {

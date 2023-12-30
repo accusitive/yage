@@ -22,3 +22,6 @@
 [submodule "engine/box2d"]
 	path = engine/box2d
 	url = https://github.com/erincatto/box2d
+[submodule "TextureAtlas"]
+	path = TextureAtlas
+	url = https://github.com/Ezphares/TextureAtlas

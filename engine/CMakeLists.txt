@@ -40,6 +40,8 @@ add_library(yage-engine
         source/engine.hh
         source/components.hh
         picoPNG/picopng.cpp
+        source/renderpass.cc
+        source/renderpass.hh
 )
 
 # Link libraries
@@ -53,18 +55,18 @@ target_link_libraries(yage-engine box2d)
 #        COMMENT "Compiling shaders..." VERBATIM)
 
 #add_dependencies(yage-engine compile_shaders)
-set(SHDC "${CMAKE_SOURCE_DIR}/engine/sokol-tools-bin/bin/linux/sokol-shdc")
-
-function(compile_shader SHADER_INPUT SHADER_OUTPUT SLANG)
-    execute_process(
-            COMMAND ${SHDC} "--input" "${CMAKE_SOURCE_DIR}/assets/shaders/${SHADER_INPUT}" "--output" "${CMAKE_SOURCE_DIR}/engine/gen/${SHADER_OUTPUT}" "--slang" "${SLANG}"
-            RESULT_VARIABLE result
-    )
-    if(result)
-        message(FATAL_ERROR "Failed to compile shader.")
-    endif()
-endfunction()
-compile_shader("triangle.glsl" "triangle.glsl.h" "glsl330")
+#set(SHDC "${CMAKE_SOURCE_DIR}/engine/sokol-tools-bin/bin/linux/sokol-shdc")
+#
+#function(compile_shader SHADER_INPUT SHADER_OUTPUT SLANG)
+#    execute_process(
+#            COMMAND ${SHDC} "--input" "${CMAKE_SOURCE_DIR}/assets/shaders/${SHADER_INPUT}" "--output" "${CMAKE_SOURCE_DIR}/engine/gen/${SHADER_OUTPUT}" "--slang" "${SLANG}"
+#            RESULT_VARIABLE result
+#    )
+#    if(result)
+#        message(FATAL_ERROR "Failed to compile shader.")
+#    endif()
+#endfunction()
+#compile_shader("triangle.glsl" "triangle.glsl.h" "glsl330")
 
 target_include_directories(yage-engine PUBLIC
         #        ${squirrel_SOURCE_DIR}/include
